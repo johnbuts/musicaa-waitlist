@@ -246,19 +246,43 @@
       margin-right: 6px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    #form-message {
-      position: absolute;
-      top: calc(100% + 10px);
-      left: 0; right: 0;
-      text-align: center;
-      font-size: 13px;
+    /* Toast notification — centered over the sphere */
+    #toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.94);
+      z-index: 90;
+      max-width: 380px;
+      width: max-content;
+      padding: 18px 26px;
+      background: rgba(15, 15, 18, 0.92);
+      border: 1px solid rgba(168, 85, 247, 0.32);
+      border-radius: 16px;
+      backdrop-filter: blur(16px) saturate(140%);
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.55),
+        0 0 60px rgba(139, 92, 246, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      font-size: 15px;
       font-weight: 500;
-      min-height: 18px;
-      transition: opacity 0.2s;
+      color: rgba(255, 255, 255, 0.92);
+      text-align: center;
+      line-height: 1.4;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s linear 0.3s;
     }
-    #form-message.success { color: #6ee7b7; }
-    #form-message.error { color: #fca5a5; }
-    #form-message.info { color: rgba(255, 255, 255, 0.55); }
+    #toast.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, -50%) scale(1);
+      transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s linear 0s;
+    }
+    #toast.error { border-color: rgba(252, 165, 165, 0.45); color: #fecaca; }
+    #toast.info { border-color: rgba(168, 85, 247, 0.45); }
 
     /* Success modal — pops up after a confirmed signup */
     #success-modal {
@@ -398,10 +422,11 @@
           <input id="email-input" type="email" placeholder="you@example.com" autocomplete="email" required>
           <button id="submit-btn" type="submit">Join Waitlist</button>
         </form>
-        <p id="form-message"></p>
       </div>
     </section>
   </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <div id="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title">
     <div class="success-card">
@@ -1226,11 +1251,24 @@
     const form = document.getElementById('waitlist-form');
     const emailInput = document.getElementById('email-input');
     const submitBtn = document.getElementById('submit-btn');
-    const formMessage = document.getElementById('form-message');
-
+    // Centered toast notification for non-success form feedback.
+    const toastEl = document.getElementById('toast');
+    let toastTimer = null;
+    function showToast(text, kind) {
+      if (!text) return;
+      toastEl.textContent = text;
+      toastEl.className = '';
+      if (kind) toastEl.classList.add(kind);
+      // Force reflow so the visible class transition fires reliably
+      void toastEl.offsetWidth;
+      toastEl.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('visible'), 3500);
+    }
+    // Keep the existing API so callsites don't change. Empty text = no-op.
     function setMessage(text, kind) {
-      formMessage.textContent = text;
-      formMessage.className = kind || '';
+      if (!text) return;
+      showToast(text, kind);
     }
 
     function setLoading(loading) {
