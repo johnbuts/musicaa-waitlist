@@ -104,7 +104,7 @@ function sendConfirmationEmail(email) {
   const html = buildEmailHtml();
   const plain =
     "You're on the " + APP_NAME + " waitlist.\n\n" +
-    "Over 100,000 songs are released every day. " + APP_NAME + " surfaces the actual unique ones based on your taste — not what everyone else is listening to.\n\n" +
+    "Over 100,000 songs are released every day. " + APP_NAME + " surfaces the actual unique ones based on your taste, not what everyone else is listening to.\n\n" +
     "We'll email you the moment early access opens.\n\n" +
     "Visit: " + LANDING_PAGE_URL + "\n\n" +
     "— The " + APP_NAME + " team";
@@ -129,7 +129,7 @@ function buildEmailHtml() {
     '          <p style="margin:0;color:rgba(196,181,253,0.85);font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;">You\'re on the list</p>',
     '        </td></tr>',
     '        <tr><td style="padding:0 36px 12px 36px;text-align:center;">',
-    '          <p style="margin:0;color:rgba(196,181,253,0.85);font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;">Over 100,000 songs released every day</p>',
+    '          <p style="margin:0;color:rgba(196,181,253,0.85);font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;">Over 100,000 songs are released every day</p>',
     '        </td></tr>',
     '        <tr><td style="padding:0 36px 28px 36px;color:rgba(255,255,255,0.85);font-size:16px;line-height:1.55;text-align:center;">',
     '          <p style="margin:0 0 14px 0;">Thanks for joining the ' + APP_NAME + ' waitlist.</p>',

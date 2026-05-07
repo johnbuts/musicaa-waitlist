@@ -166,6 +166,9 @@
       background: rgba(255, 255, 255, 0.06);
     }
     #submit-btn {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
       width: 100%;
       padding: 14px 16px;
       background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
@@ -180,12 +183,37 @@
       transition: transform 0.12s, box-shadow 0.18s, opacity 0.18s;
       box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
     }
+    /* Shine sweep — same shape & cadence as the SPIN button on the Discover page */
+    #submit-btn::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      bottom: -20px;
+      left: 0;
+      width: 40px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.45) 50%,
+        transparent 100%
+      );
+      transform: skewX(-20deg) translateX(-100px);
+      animation: shine-sweep 3.2s linear infinite;
+      z-index: -1;
+      pointer-events: none;
+    }
+    @keyframes shine-sweep {
+      0%   { transform: skewX(-20deg) translateX(-100px); }
+      75%  { transform: skewX(-20deg) translateX(900px); }
+      100% { transform: skewX(-20deg) translateX(900px); }
+    }
     #submit-btn:hover:not(:disabled) {
       transform: translateY(-1px);
       box-shadow: 0 12px 28px rgba(139, 92, 246, 0.4);
     }
     #submit-btn:active:not(:disabled) { transform: translateY(0); }
     #submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    #submit-btn:disabled::before { animation-play-state: paused; }
     #submit-btn .spinner {
       display: inline-block;
       width: 14px; height: 14px;
@@ -235,7 +263,7 @@
 
     <section id="form-section">
       <div id="info-card">
-        <p class="stat">Over 100,000 songs released every day</p>
+        <p class="stat">Over 100,000 songs are released every day</p>
         <p class="tagline">Get actual unique songs based on your taste, not what everyone else is listening to.</p>
       </div>
       <div id="form-card">
@@ -268,7 +296,7 @@
     // ─────────────────────────────────────────────────────────────────────
     // CONFIG: paste your Google Apps Script Web App URL here after deploying
     // ─────────────────────────────────────────────────────────────────────
-    const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzj7GcexI3DkPawR4xIkO59H_OhWAm0UGIb0lrp4g6bP6ZimsINT2qm8H6J6mI87IbR/exec';
 
     // ── Genre point processing (ported from lib/genrePoints.ts) ──
     const rawGenres = JSON.parse(document.getElementById('genre-data').textContent);
