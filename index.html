@@ -206,9 +206,28 @@
       75%  { transform: skewX(-20deg) translateX(900px); }
       100% { transform: skewX(-20deg) translateX(900px); }
     }
+    /* Hover: a wet green orb grows from the center and fills the button */
+    #submit-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background:
+        radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.0) 42%),
+        radial-gradient(circle at center, #6ee7b7 0%, #10b981 45%, #047857 80%, #064e3b 100%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: -1;
+      pointer-events: none;
+    }
     #submit-btn:hover:not(:disabled) {
       transform: translateY(-1px);
-      filter: brightness(1.08) saturate(1.05);
+    }
+    #submit-btn:hover:not(:disabled)::after {
+      transform: translate(-50%, -50%) scale(1.5);
     }
     #submit-btn:hover:not(:disabled)::before {
       animation-duration: 1.6s;
