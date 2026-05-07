@@ -383,10 +383,8 @@
     const zAxis = new THREE.Vector3(0, 0, 1);
     const twistQuat = new THREE.Quaternion();
 
-    // Pretend a "touch" happened 5s ago so auto-rotate kicks in 5s after page load
-    // (the 10s idle timeout below means: now + 5s = 10s since fake-touch).
-    let lastTouchTime = Date.now() - 5000;
-    let isAutoRotating = false;
+    let lastTouchTime = 0;
+    let isAutoRotating = true;
 
     function beginDrag(x, y) {
       isDragging = true;
@@ -939,7 +937,7 @@
       animationTime += 0.016;
 
       if (!isDragging && !isPinching) {
-        if (Date.now() - lastTouchTime > 10000) {
+        if (lastTouchTime === 0 || (Date.now() - lastTouchTime > 10000)) {
           isAutoRotating = true;
         }
       }
