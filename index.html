@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Musicaa — AI-Powered Music Discovery</title>
+  <meta name="description" content="Find your next favorite song. Join the waitlist for Musicaa, an AI-powered music discovery app.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0a0a0a;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0; left: 0;
+      color: #fff;
+      font-family: 'Rubik', -apple-system, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Vertical layout: header → globe → form */
+    #app {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+
+    #header {
+      flex: 0 0 auto;
+      text-align: center;
+      padding: 28px 24px 12px 24px;
+      z-index: 30;
+    }
+    #header h1 {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+    }
+    #header .subtitle {
+      margin-top: 6px;
+      font-size: 13px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Globe section — Three.js canvas lives here, sized to fit */
+    #globe {
+      flex: 1 1 auto;
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+    }
+    #globe canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+    #globe canvas.grabbing { cursor: grabbing; }
+
+    #labels-container {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 10;
+      overflow: hidden;
+    }
+    .point-label {
+      position: absolute;
+      left: 0; top: 0;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 2px 6px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      white-space: nowrap;
+      pointer-events: none;
+      will-change: transform, opacity;
+      transform: translate3d(0, 0, 0);
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    /* Form section — always visible at the bottom */
+    #form-section {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px 24px 24px;
+      z-index: 30;
+    }
+    #info-card, #form-card {
+      position: relative;
+      max-width: 720px;
+      width: 100%;
+      padding: 22px 28px;
+      background: rgba(15, 15, 18, 0.7);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      border-radius: 18px;
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        0 0 60px rgba(139, 92, 246, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      text-align: center;
+    }
+    #info-card { padding: 18px 28px; }
+    #info-card .stat {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(196, 181, 253, 0.85);
+      margin-bottom: 10px;
+    }
+    #info-card .tagline {
+      font-size: 17px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.5;
+      margin: 0;
+    }
+    #waitlist-form {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    #email-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.18s, background 0.18s;
+    }
+    #email-input::placeholder { color: rgba(255, 255, 255, 0.35); }
+    #email-input:focus {
+      border-color: rgba(168, 85, 247, 0.55);
+      background: rgba(255, 255, 255, 0.06);
+    }
+    #submit-btn {
+      width: 100%;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.18s, opacity 0.18s;
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+    }
+    #submit-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(139, 92, 246, 0.4);
+    }
+    #submit-btn:active:not(:disabled) { transform: translateY(0); }
+    #submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    #submit-btn .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #form-message {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      min-height: 18px;
+      transition: opacity 0.2s;
+    }
+    #form-message.success { color: #6ee7b7; }
+    #form-message.error { color: #fca5a5; }
+    #form-message.info { color: rgba(255, 255, 255, 0.55); }
+
+    @media (max-width: 480px) {
+      #header { padding: 18px 18px 8px 18px; }
+      #header h1 { font-size: 28px; }
+      #header .subtitle { font-size: 11px; }
+      #form-section { padding: 12px 16px 18px 16px; gap: 10px; }
+      #info-card, #form-card { padding: 16px 18px; border-radius: 14px; }
+      #info-card .stat { font-size: 10px; }
+      #waitlist-form { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <h1>Musicaa</h1>
+      <div class="subtitle">Every genre we use — mapped in space</div>
+    </header>
+
+    <main id="globe">
+      <div id="labels-container"></div>
+    </main>
+
+    <section id="form-section">
+      <div id="info-card">
+        <p class="stat">Over 100,000 songs released every day</p>
+        <p class="tagline">Get actual unique songs based on your taste, not what everyone else is listening to.</p>
+      </div>
+      <div id="form-card">
+        <form id="waitlist-form" novalidate>
+          <input id="email-input" type="email" placeholder="you@example.com" autocomplete="email" required>
+          <button id="submit-btn" type="submit">Join Waitlist</button>
+        </form>
+        <p id="form-message"></p>
+      </div>
+    </section>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script id="genre-data" type="application/json">[{"genre":"Adult Contemporary","x":-0.7983,"y":2.2331,"z":6.6949},{"genre":"Afrobeats","x":-0.2107,"y":4.9484,"z":5.225},{"genre":"Alt-Pop","x":-0.267,"y":3.8281,"z":4.8538},{"genre":"Alternative Dance","x":-1.1254,"y":2.8861,"z":3.6058},{"genre":"Alternative R&B","x":-0.2234,"y":4.1795,"z":5.0125},{"genre":"Alternative Rock","x":-0.5414,"y":0.5515,"z":5.7357},{"genre":"Ambient","x":-0.4586,"y":1.2438,"z":4.1753},{"genre":"Art Pop","x":-0.2202,"y":1.8923,"z":5.3755},{"genre":"Art Rock","x":-0.5207,"y":1.6067,"z":6.1276},{"genre":"Blues Rock","x":-1.3408,"y":1.5296,"z":6.9417},{"genre":"Boom Bap","x":-0.177,"y":5.8488,"z":5.5233},{"genre":"Chanson","x":-1.2915,"y":2.6812,"z":7.7401},{"genre":"Conscious Hip Hop","x":-0.0859,"y":5.7339,"z":5.5458},{"genre":"Contemporary Country","x":-0.5789,"y":1.2509,"z":7.3146},{"genre":"Contemporary Folk","x":-0.2017,"y":2.2245,"z":7.3945},{"genre":"Contemporary R&B","x":-0.277,"y":4.3019,"z":5.1628},{"genre":"Country Pop","x":-0.6995,"y":1.3366,"z":7.2932},{"genre":"Country Rock","x":-0.8071,"y":1.2604,"z":7.0825},{"genre":"Country","x":-0.6276,"y":1.4101,"z":7.355},{"genre":"Dance-Pop","x":-1.3199,"y":3.1335,"z":2.9761},{"genre":"Deep House","x":-1.3434,"y":2.4609,"z":2.822},{"genre":"Downtempo","x":-0.3032,"y":2.0197,"z":4.3882},{"genre":"Dream Pop","x":-0.3087,"y":1.5875,"z":4.9926},{"genre":"Electro House","x":-0.8457,"y":2.571,"z":2.4848},{"genre":"Electropop","x":-1.1048,"y":3.0263,"z":3.1131},{"genre":"Folk Pop","x":-0.2857,"y":2.1347,"z":6.9739},{"genre":"Folk Rock","x":-0.6378,"y":1.6588,"z":6.955},{"genre":"Gangsta Rap","x":-0.0926,"y":5.9706,"z":5.2321},{"genre":"Hard Rock","x":-1.0313,"y":0.185,"z":5.5061},{"genre":"Hardcore Hip Hop","x":-0.1457,"y":5.8836,"z":5.5026},{"genre":"Heavy Metal","x":-1.1129,"y":-0.119,"z":5.0401},{"genre":"Hip Hop","x":-0.0479,"y":5.8594,"z":5.3797},{"genre":"IDM","x":-0.6242,"y":1.7889,"z":3.3219},{"genre":"Indie Pop","x":-0.2287,"y":1.8346,"z":5.6061},{"genre":"Indie Rock","x":-0.3822,"y":0.9689,"z":5.558},{"genre":"Indietronica","x":-0.4433,"y":2.0874,"z":4.4527},{"genre":"Jazz","x":-1.052,"y":2.7188,"z":8.1099},{"genre":"Modern Classical","x":-0.9216,"y":2.5657,"z":8.2135},{"genre":"Neo-Psychedelia","x":-0.4001,"y":1.4898,"z":4.9925},{"genre":"Neo-Soul","x":-0.341,"y":3.9665,"z":5.2604},{"genre":"New Wave","x":-0.9194,"y":1.2062,"z":6.0716},{"genre":"Pop Punk","x":-0.462,"y":0.2482,"z":5.5901},{"genre":"Pop Rap","x":-0.2211,"y":5.6662,"z":5.1023},{"genre":"Pop Reggae","x":-1.2178,"y":3.395,"z":6.2513},{"genre":"Pop Rock","x":-0.6684,"y":1.0141,"z":6.6265},{"genre":"Pop Soul","x":-1.0209,"y":2.8773,"z":6.3732},{"genre":"Pop","x":-0.6846,"y":2.72,"z":6.4539},{"genre":"Post-Punk","x":-0.6496,"y":0.9855,"z":5.2967},{"genre":"Progressive House","x":-1.1491,"y":2.4331,"z":2.3377},{"genre":"Reggae","x":-1.179,"y":3.5197,"z":6.4056},{"genre":"Reggaet\u00f3n","x":-0.1678,"y":5.0911,"z":5.2502},{"genre":"Rhythm & Blues","x":-1.6728,"y":2.4904,"z":7.6321},{"genre":"Rock & Roll","x":-1.7479,"y":2.3183,"z":7.7094},{"genre":"Rockabilly","x":-1.6665,"y":2.2035,"z":7.6865},{"genre":"Singer-Songwriter","x":-0.365,"y":2.1121,"z":7.1766},{"genre":"Soft Rock","x":-0.8114,"y":1.8782,"z":6.8963},{"genre":"Soul","x":-1.4933,"y":2.9078,"z":6.6973},{"genre":"Southern Soul","x":-1.5994,"y":2.7926,"z":6.9235},{"genre":"Standards","x":-1.4218,"y":2.5584,"z":8.0208},{"genre":"Synthpop","x":-1.1163,"y":2.9061,"z":3.7274},{"genre":"Tech House","x":-1.2516,"y":2.292,"z":2.5228},{"genre":"Traditional Pop","x":-1.3504,"y":2.5638,"z":8.091},{"genre":"Trap","x":-0.1542,"y":5.8612,"z":5.0485},{"genre":"Trip Hop","x":-0.1855,"y":2.1118,"z":4.5947},{"genre":"Vocal Jazz","x":-1.4287,"y":2.7086,"z":7.9556},{"genre":"Cool Jazz","x":-1.0103,"y":2.7764,"z":8.0614},{"genre":"Disco","x":-1.6174,"y":3.2723,"z":5.7059},{"genre":"Progressive Rock","x":-0.86,"y":1.5991,"z":6.4769},{"genre":"Delta Blues","x":-1.6149,"y":2.3815,"z":7.9257},{"genre":"Liquid Drum and Bass","x":-0.6935,"y":1.8594,"z":2.5868},{"genre":"Abstract Hip Hop","x":0.1616,"y":5.6929,"z":5.3668},{"genre":"Jazz Fusion","x":-0.5603,"y":2.6059,"z":7.8571},{"genre":"Chamber Pop","x":-0.0322,"y":1.9239,"z":6.554},{"genre":"Americana","x":-0.2859,"y":1.8339,"z":7.186},{"genre":"Post-Punk Revival","x":-0.4084,"y":0.7952,"z":5.4871},{"genre":"Punk Rock","x":-0.6453,"y":0.1639,"z":5.4848},{"genre":"House","x":-1.2712,"y":2.6251,"z":2.7959},{"genre":"Post-Rock","x":-0.3145,"y":1.3959,"z":4.7911},{"genre":"Eurodance","x":-1.0901,"y":3.1023,"z":2.6833},{"genre":"Electronic Dance Music","x":-0.9504,"y":2.5926,"z":2.7515},{"genre":"Alternative Metal","x":-0.7607,"y":-0.2621,"z":4.7267},{"genre":"Experimental Hip Hop","x":0.054,"y":5.6226,"z":5.0732},{"genre":"Power Pop","x":-0.6525,"y":0.4833,"z":5.9613},{"genre":"Dancehall","x":-0.246,"y":5.2032,"z":5.414},{"genre":"Roots Reggae","x":-1.1209,"y":3.587,"z":6.4004},{"genre":"Blues","x":-1.6831,"y":2.3065,"z":7.8305},{"genre":"Festival Progressive House","x":-0.9569,"y":2.6782,"z":2.1343},{"genre":"Rock","x":-0.9611,"y":1.1986,"z":6.6279},{"genre":"MPB","x":-0.7165,"y":2.8726,"z":7.1636},{"genre":"Jazz Rap","x":-0.0608,"y":5.7726,"z":5.587},{"genre":"Glam Rock","x":-1.083,"y":1.1154,"z":6.3297},{"genre":"Hard Bop","x":-1.0967,"y":2.755,"z":8.1904},{"genre":"Blue-Eyed Soul","x":-1.1668,"y":2.0596,"z":7.1318},{"genre":"Indie Folk","x":0.0715,"y":2.1237,"z":7.1284},{"genre":"Cloud Rap","x":0.0519,"y":5.5541,"z":4.9291},{"genre":"Funk","x":-1.4931,"y":3.2698,"z":6.1115},{"genre":"AOR","x":-0.9169,"y":1.1123,"z":6.6496},{"genre":"Psychedelic Pop","x":-0.3662,"y":1.6223,"z":5.7714},{"genre":"Acid Jazz","x":-1.3592,"y":3.3605,"z":5.9975},{"genre":"Samba","x":-0.9885,"y":3.0318,"z":7.4955},{"genre":"Bossa nova","x":-0.6917,"y":2.8489,"z":7.8036},{"genre":"Smooth Soul","x":-1.0924,"y":2.792,"z":6.5792},{"genre":"Piano Rock","x":-0.689,"y":1.5865,"z":6.834},{"genre":"Drum and Bass","x":-0.6285,"y":1.7473,"z":2.6457},{"genre":"Rap Rock","x":0.3619,"y":5.6002,"z":5.5374},{"genre":"Tropical House","x":-1.1109,"y":3.0449,"z":2.9059},{"genre":"Nu-Disco","x":-1.4652,"y":2.9162,"z":3.1369},{"genre":"Baroque Pop","x":-0.8939,"y":2.0574,"z":7.1899},{"genre":"Sophisti-Pop","x":-0.777,"y":2.7001,"z":6.8965},{"genre":"Dub","x":-0.2987,"y":2.1643,"z":4.3719},{"genre":"Post-Hardcore","x":-0.6104,"y":-0.0903,"z":5.1704},{"genre":"Brill Building","x":-1.5066,"y":2.2592,"z":7.6611},{"genre":"Brostep","x":-0.567,"y":2.1163,"z":2.3858},{"genre":"Psychedelic Rock","x":-1.14,"y":1.453,"z":6.6333},{"genre":"Industrial Rock","x":-0.8145,"y":0.2965,"z":4.1879},{"genre":"Euro House","x":-1.3336,"y":3.0463,"z":2.4483},{"genre":"Breakbeat","x":-0.9118,"y":1.9922,"z":2.9315},{"genre":"Trance","x":-1.0715,"y":2.3523,"z":2.0242},{"genre":"Ambient Pop","x":-0.1581,"y":1.725,"z":4.937},{"genre":"Nu Metal","x":-0.782,"y":-0.5398,"z":4.6569},{"genre":"Jangle Pop","x":-0.6303,"y":0.9409,"z":6.5247},{"genre":"Hip Hop Soul","x":-0.2758,"y":4.4862,"z":5.2436},{"genre":"Trap [EDM]","x":-0.5664,"y":1.9608,"z":2.4717},{"genre":"Dubstep","x":-0.719,"y":1.7446,"z":2.578},{"genre":"Chillwave","x":-0.5362,"y":2.1415,"z":4.1022},{"genre":"Synth Funk","x":-1.4852,"y":3.378,"z":5.7155},{"genre":"Alt-Country","x":-0.1175,"y":1.8735,"z":6.8756},{"genre":"Grime","x":-0.0135,"y":6.0275,"z":5.3391},{"genre":"Techno","x":-1.156,"y":2.1031,"z":2.5267},{"genre":"Industrial Metal","x":-0.8818,"y":-0.0226,"z":4.2755},{"genre":"Electroclash","x":-0.6931,"y":2.3234,"z":2.6583},{"genre":"Symphonic Metal","x":-0.8871,"y":-0.0164,"z":5.0016},{"genre":"Power Metal","x":-0.9232,"y":-0.286,"z":4.7503},{"genre":"Ragga","x":-0.252,"y":5.221,"z":5.5098},{"genre":"Progressive Metal","x":-0.8309,"y":-0.2509,"z":4.822},{"genre":"Chamber Folk","x":-0.063,"y":2.304,"z":7.372},{"genre":"Bedroom Pop","x":-0.1987,"y":2.1647,"z":5.102},{"genre":"Garage House","x":-1.4203,"y":2.8447,"z":2.6139},{"genre":"Synthwave","x":-0.7928,"y":2.338,"z":3.3615},{"genre":"Electro-Disco","x":-1.4872,"y":2.9448,"z":3.2953},{"genre":"Vocal Trance","x":-0.9588,"y":2.5012,"z":1.8825},{"genre":"Big Beat","x":-0.8592,"y":1.9301,"z":2.954},{"genre":"UK Drill","x":-0.1996,"y":5.9511,"z":5.1061},{"genre":"Southern Rock","x":-1.0945,"y":1.2688,"z":6.8804},{"genre":"Acoustic Rock","x":-0.1149,"y":2.0095,"z":7.2212},{"genre":"Funk Rock","x":-1.2888,"y":1.4302,"z":6.3826},{"genre":"Thrash Metal","x":-1.0463,"y":-0.3853,"z":4.4862},{"genre":"Glam Metal","x":-1.1472,"y":0.1341,"z":5.3803},{"genre":"Hip House","x":-1.0317,"y":2.8436,"z":2.826},{"genre":"EBM","x":-0.7944,"y":1.2948,"z":3.3232},{"genre":"Emo Rap","x":0.0265,"y":5.5493,"z":4.932},{"genre":"Metal","x":-1.0085,"y":-0.1654,"z":4.4805},{"genre":"Dance","x":-1.2232,"y":3.0287,"z":3.4818},{"genre":"Shoegaze","x":-0.3892,"y":1.2541,"z":4.8205},{"genre":"Funky House","x":-1.3048,"y":3.1057,"z":2.706},{"genre":"Diva House","x":-1.3677,"y":3.0297,"z":2.4233},{"genre":"Jazz Pop","x":-0.7219,"y":2.8323,"z":7.2387},{"genre":"Progressive Trance","x":-0.9519,"y":2.4112,"z":2.093},{"genre":"Electro-Industrial","x":-0.7384,"y":1.1781,"z":3.472},{"genre":"Groove Metal","x":-0.819,"y":-0.5371,"z":4.5036},{"genre":"UK Garage","x":-1.3146,"y":2.5291,"z":2.5817},{"genre":"Slacker Rock","x":-0.2899,"y":1.4134,"z":5.3742},{"genre":"Darkwave","x":-0.6546,"y":1.2887,"z":3.5893},{"genre":"Euro-Disco","x":-1.3435,"y":3.142,"z":3.7155},{"genre":"Metalcore","x":-0.8848,"y":-0.4776,"z":4.5081},{"genre":"Hyphy","x":-0.0992,"y":5.9432,"z":5.1547},{"genre":"Progressive Pop","x":-0.8448,"y":1.7817,"z":6.39},{"genre":"UK Bass","x":-0.8262,"y":1.7013,"z":2.7313},{"genre":"Electro","x":-1.0343,"y":2.0393,"z":2.8122},{"genre":"Garage Rock Revival","x":-0.3522,"y":0.7406,"z":5.6591},{"genre":"Post-Britpop","x":-0.4459,"y":0.9498,"z":6.0915},{"genre":"New Rave","x":-0.9298,"y":2.8103,"z":3.6248},{"genre":"Post-Grunge","x":-0.7848,"y":0.2159,"z":5.6649},{"genre":"Dance-Punk","x":-0.5285,"y":0.9972,"z":5.379},{"genre":"Gothic Rock","x":-0.7253,"y":0.4731,"z":4.4179},{"genre":"Death Metal","x":-1.0684,"y":-0.3089,"z":4.3641},{"genre":"Boogie","x":-1.691,"y":3.1137,"z":5.8972},{"genre":"Bro-Country","x":-0.5696,"y":1.1473,"z":7.3412},{"genre":"Emo-Pop","x":-0.5083,"y":0.1375,"z":5.6373}]</script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+    import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+    import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+
+    // ─────────────────────────────────────────────────────────────────────
+    // CONFIG: paste your Google Apps Script Web App URL here after deploying
+    // ─────────────────────────────────────────────────────────────────────
+    const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+    // ── Genre point processing (ported from lib/genrePoints.ts) ──
+    const rawGenres = JSON.parse(document.getElementById('genre-data').textContent);
+
+    function hslToHex(h, s, l) {
+      s /= 100; l /= 100;
+      const a = s * Math.min(l, 1 - l);
+      const f = (n) => {
+        const k = (n + h / 30) % 12;
+        const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * c).toString(16).padStart(2, '0');
+      };
+      return '#' + f(0) + f(8) + f(4);
+    }
+
+    function buildGenrePoints(data) {
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+      for (const g of data) {
+        if (g.x < minX) minX = g.x; if (g.x > maxX) maxX = g.x;
+        if (g.y < minY) minY = g.y; if (g.y > maxY) maxY = g.y;
+        if (g.z < minZ) minZ = g.z; if (g.z > maxZ) maxZ = g.z;
+      }
+      const rangeX = maxX - minX || 1;
+      const rangeY = maxY - minY || 1;
+      const rangeZ = maxZ - minZ || 1;
+      const RADIUS = 9.8;
+
+      return data.map((g) => {
+        const nx = ((g.x - minX) / rangeX) * 2 - 1;
+        const ny = ((g.y - minY) / rangeY) * 2 - 1;
+        const nz = ((g.z - minZ) / rangeZ) * 2 - 1;
+        const dist = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+        const scale = (1 / dist) * RADIUS;
+        const px = nx * scale;
+        const py = ny * scale;
+        const pz = nz * scale;
+        const geographicSweep = (px + py) / (RADIUS * 2) + 0.5;
+        const blendFactor = Math.max(0, Math.min(1, geographicSweep));
+        const hue = 240 + blendFactor * 100;
+        const cw = (nz + 1) / 2;
+        const saturation = 85 + cw * 15;
+        const lightness = 40 + cw * 15;
+        return {
+          name: g.genre,
+          x: px, y: py, z: pz,
+          color: hslToHex(hue, saturation, lightness),
+        };
+      });
+    }
+
+    const points = buildGenrePoints(rawGenres);
+
+    // ── Tweakable visual constants ──
+    const BRIGHTNESS  = 1.3;
+    const DOT_SIZE    = 2.7;
+    const OPACITY     = 1.0;
+    const FOG_DENSITY = 0.02;
+
+    // ── Scene + camera ──
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0a);
+    scene.fog = new THREE.FogExp2(0x0a0a0a, FOG_DENSITY);
+
+    const group = new THREE.Group();
+    group.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -0.4);
+    scene.add(group);
+
+    const bgLayer1 = new THREE.Group();
+    const bgLayer2 = new THREE.Group();
+    const bgLayer3 = new THREE.Group();
+    scene.add(bgLayer1); scene.add(bgLayer2); scene.add(bgLayer3);
+
+    const globeContainer = document.getElementById('globe');
+    function getGlobeSize() {
+      const r = globeContainer.getBoundingClientRect();
+      return { w: Math.max(1, r.width), h: Math.max(1, r.height) };
+    }
+    let { w: gw, h: gh } = getGlobeSize();
+
+    const camera = new THREE.PerspectiveCamera(60, gw / gh, 0.1, 200);
+    const INITIAL_CAM_DIST = 28;
+    const MIN_CAM_DIST = 12;
+    const MAX_CAM_DIST = 32;
+    camera.position.set(0, 0, INITIAL_CAM_DIST);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      powerPreference: 'high-performance',
+      logarithmicDepthBuffer: false,
+    });
+    renderer.setSize(gw, gh);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    globeContainer.appendChild(renderer.domElement);
+
+    // ── Drift-free drag-to-rotate (shared between mouse + touch) ──
+    const ROTATION_SPEED = 0.004;
+    let isDragging = false;
+    let startTouchX = 0, startTouchY = 0;
+    let totalDragX = 0, totalDragY = 0;
+    const rotQuat = new THREE.Quaternion();
+    const rotAxis = new THREE.Vector3();
+    const startQuat = new THREE.Quaternion();
+
+    let isPinching = false;
+    let startPinchDist = 0;
+    let startPinchAngle = 0;
+    let startCamDist = INITIAL_CAM_DIST;
+    const pinchStartQuat = new THREE.Quaternion();
+    const zAxis = new THREE.Vector3(0, 0, 1);
+    const twistQuat = new THREE.Quaternion();
+
+    let lastTouchTime = 0;
+    let isAutoRotating = true;
+
+    function beginDrag(x, y) {
+      isDragging = true;
+      isPinching = false;
+      isAutoRotating = false;
+      startTouchX = x;
+      startTouchY = y;
+      totalDragX = 0;
+      totalDragY = 0;
+      startQuat.copy(group.quaternion);
+    }
+
+    function updateDrag(x, y) {
+      totalDragX = x - startTouchX;
+      totalDragY = y - startTouchY;
+      const zoomFactor = Math.pow(camera.position.z / INITIAL_CAM_DIST, 2);
+      const angle = Math.sqrt(totalDragX * totalDragX + totalDragY * totalDragY) * ROTATION_SPEED * zoomFactor;
+      if (angle > 0.0001) {
+        rotAxis.set(totalDragY, totalDragX, 0).normalize();
+        rotQuat.setFromAxisAngle(rotAxis, angle);
+        group.quaternion.copy(startQuat);
+        group.quaternion.premultiply(rotQuat);
+        group.quaternion.normalize();
+      } else {
+        group.quaternion.copy(startQuat);
+      }
+    }
+
+    function endDrag() {
+      isDragging = false;
+      isPinching = false;
+      lastTouchTime = Date.now();
+    }
+
+    // ── Touch handlers ──
+    function getPinchDist(e) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    function getPinchAngle(e) {
+      const dx = e.touches[1].clientX - e.touches[0].clientX;
+      const dy = e.touches[1].clientY - e.touches[0].clientY;
+      return Math.atan2(dy, dx);
+    }
+
+    renderer.domElement.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        beginDrag(e.touches[0].clientX, e.touches[0].clientY);
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        isPinching = true;
+        isAutoRotating = false;
+        startPinchDist = getPinchDist(e);
+        startPinchAngle = getPinchAngle(e);
+        startCamDist = camera.position.z;
+        pinchStartQuat.copy(group.quaternion);
+      }
+    }, { passive: true });
+
+    renderer.domElement.addEventListener('touchmove', (e) => {
+      if (isDragging && e.touches.length === 1) {
+        updateDrag(e.touches[0].clientX, e.touches[0].clientY);
+      } else if (isPinching && e.touches.length === 2) {
+        const currPinchDist = getPinchDist(e);
+        const logStart = Math.log(startCamDist);
+        const logDelta = Math.log(startPinchDist / currPinchDist);
+        const newDist = Math.max(MIN_CAM_DIST, Math.min(MAX_CAM_DIST, Math.exp(logStart + logDelta)));
+        camera.position.z = newDist;
+        const currAngle = getPinchAngle(e);
+        const angleDelta = currAngle - startPinchAngle;
+        twistQuat.setFromAxisAngle(zAxis, -angleDelta);
+        group.quaternion.copy(pinchStartQuat);
+        group.quaternion.premultiply(twistQuat);
+        group.quaternion.normalize();
+      }
+    }, { passive: true });
+
+    renderer.domElement.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) {
+        endDrag();
+      } else if (e.touches.length === 1) {
+        isPinching = false;
+        beginDrag(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    // ── Mouse handlers (drag + wheel zoom) ──
+    renderer.domElement.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      beginDrag(e.clientX, e.clientY);
+      renderer.domElement.classList.add('grabbing');
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) updateDrag(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        endDrag();
+        renderer.domElement.classList.remove('grabbing');
+      }
+    });
+    renderer.domElement.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      isAutoRotating = false;
+      lastTouchTime = Date.now();
+      const factor = Math.exp(e.deltaY * 0.001);
+      const newDist = Math.max(MIN_CAM_DIST, Math.min(MAX_CAM_DIST, camera.position.z * factor));
+      camera.position.z = newDist;
+    }, { passive: false });
+
+    // ── Point cloud geometry ──
+    const count = points.length;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    const c = new THREE.Color();
+    for (let i = 0; i < count; i++) {
+      const p = points[i];
+      positions[i * 3] = p.x;
+      positions[i * 3 + 1] = p.y;
+      positions[i * 3 + 2] = p.z;
+      c.set(p.color);
+      colors[i * 3] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+      sizes[i] = 0.4;
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    // ── Shader: glowing orb points with fog ──
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        uPixelRatio: { value: renderer.getPixelRatio() },
+        uBrightness: { value: BRIGHTNESS },
+        uDotSize: { value: DOT_SIZE },
+        uOpacity: { value: OPACITY },
+        uTime: { value: 0.0 },
+        fogColor: { value: scene.fog.color },
+        fogDensity: { value: scene.fog.density },
+        uCamLocalDir: { value: new THREE.Vector3(0, 0, 1) },
+      },
+      vertexShader: `
+        varying vec3 vColor;
+        varying float vFogFactor;
+        varying float vFacing;
+        varying float vPulse;
+        uniform float uPixelRatio;
+        uniform float uDotSize;
+        uniform float uTime;
+        uniform float fogDensity;
+        uniform vec3 uCamLocalDir;
+        void main() {
+          vColor = color;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          vec3 normal = normalize(position);
+          vFacing = dot(normal, uCamLocalDir);
+          float facingAlpha = smoothstep(-0.1, 0.4, vFacing);
+
+          // Position-hashed phase — decouples pulse from color so neighbors desync
+          float seed = fract(sin(dot(position.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+          float phase = seed * 6.2831853;
+
+          // Slow cosine breath (C∞ smooth) + faint shimmer
+          float breath = 0.5 - 0.5 * cos(uTime * 1.1 + phase);
+          float shimmer = sin(uTime * 5.0 + phase * 1.7) * 0.04;
+          float pulse = mix(0.78, 1.30, breath) + shimmer;
+
+          // Remap to [0..1] for fragment use (brightness + halo coupling)
+          vPulse = clamp((pulse - 0.78) / 0.52, 0.0, 1.0);
+
+          gl_PointSize = 24.0 * uDotSize * uPixelRatio * pulse * (1.0 / -mvPosition.z) * 5.0;
+          gl_PointSize = clamp(gl_PointSize, 3.0, 60.0);
+          gl_PointSize *= facingAlpha;
+          gl_Position = projectionMatrix * mvPosition;
+          float fogDist = length(mvPosition.xyz);
+          vFogFactor = 1.0 - exp(-fogDensity * fogDensity * fogDist * fogDist);
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        varying vec3 vColor;
+        varying float vFogFactor;
+        varying float vFacing;
+        varying float vPulse;
+        uniform vec3 fogColor;
+        uniform float uBrightness;
+        uniform float uOpacity;
+
+        void main() {
+          vec2 coord = gl_PointCoord - vec2(0.5);
+          float dist = length(coord);
+
+          // Crisp inner disc + soft outer halo that blooms with the pulse
+          float core = 1.0 - smoothstep(0.42, 0.50, dist);
+          float halo = 1.0 - smoothstep(0.20, 0.50, dist);
+          halo = pow(halo, 2.2) * (0.30 + vPulse * 0.40);
+          float alpha = max(core, halo);
+
+          // Direct RGB intensity — preserves hue + saturation. Capped at 1.0
+          // so the color never pushes toward white at peak.
+          float intensity = clamp(uBrightness * (0.45 + vPulse * 0.35), 0.0, 1.0);
+          vec3 col = vColor * intensity;
+          col = mix(col, fogColor, vFogFactor);
+
+          float facingAlpha = smoothstep(-0.1, 0.4, vFacing);
+          alpha *= uOpacity * facingAlpha;
+          if (alpha < 0.01) discard;
+          gl_FragColor = vec4(col, alpha);
+        }
+      `,
+      vertexColors: true,
+      transparent: true,
+      depthWrite: false,
+    });
+
+    // ── KNN connecting lines ──
+    const MAX_CONNECTIONS = 3;
+    const nnLinePositions = [];
+    const nnLineColors = [];
+    const lineSegmentPairs = [];
+    const addedLines = new Set();
+    for (let i = 0; i < count; i++) {
+      const ax = positions[i * 3], ay = positions[i * 3 + 1], az = positions[i * 3 + 2];
+      const nb = [];
+      for (let j = 0; j < count; j++) {
+        if (i === j) continue;
+        const dx = ax - positions[j * 3];
+        const dy = ay - positions[j * 3 + 1];
+        const dz = az - positions[j * 3 + 2];
+        nb.push({ j, d: dx * dx + dy * dy + dz * dz });
+      }
+      nb.sort((a, b) => a.d - b.d);
+      for (let k = 0; k < Math.min(MAX_CONNECTIONS, nb.length); k++) {
+        const j = nb[k].j;
+        const minIdx = Math.min(i, j);
+        const maxIdx = Math.max(i, j);
+        const key = minIdx + ',' + maxIdx;
+        if (!addedLines.has(key)) {
+          addedLines.add(key);
+          nnLinePositions.push(
+            ax, ay, az,
+            positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2]
+          );
+          nnLineColors.push(
+            colors[i * 3], colors[i * 3 + 1], colors[i * 3 + 2],
+            colors[j * 3], colors[j * 3 + 1], colors[j * 3 + 2]
+          );
+          lineSegmentPairs.push(i, j);
+        }
+      }
+    }
+
+    const nnGeometry = new LineSegmentsGeometry();
+    nnGeometry.setPositions(nnLinePositions);
+    nnGeometry.setColors(nnLineColors);
+    const origLineColors = new Float32Array(nnLineColors);
+    const origLinePositions = new Float32Array(nnLinePositions);
+    const nnMaterial = new LineMaterial({
+      color: 0xffffff,
+      vertexColors: true,
+      transparent: false,
+      opacity: 1.0,
+      linewidth: 3,
+      alphaToCoverage: true,
+      resolution: new THREE.Vector2(gw * renderer.getPixelRatio(), gh * renderer.getPixelRatio()),
+      fog: true,
+      depthTest: true,
+      depthWrite: false,
+    });
+    const nnLines = new LineSegments2(nnGeometry, nnMaterial);
+    nnLines.renderOrder = 5;
+    group.add(nnLines);
+
+    // ── Sphere occluder so back-facing dots/lines don't bleed through ──
+    const sphereGeom = new THREE.SphereGeometry(9.5, 64, 64);
+    const sphereMat = new THREE.MeshBasicMaterial({
+      color: 0x1a1a1a,
+      transparent: false,
+      opacity: 1.0,
+      depthWrite: true,
+      depthTest: true,
+      fog: true,
+    });
+    const sphere = new THREE.Mesh(sphereGeom, sphereMat);
+    sphere.renderOrder = 3;
+    group.add(sphere);
+
+    const pointCloud = new THREE.Points(geometry, material);
+    pointCloud.renderOrder = 4;
+    group.add(pointCloud);
+
+    // ── Starfield (3 parallax layers) ──
+    function createStarLayer(n, rMin, rMax) {
+      const sp = new Float32Array(n * 3);
+      const sc = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const r = rMin + Math.random() * (rMax - rMin);
+        sp[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        sp[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        sp[i * 3 + 2] = r * Math.cos(phi);
+        const b = 0.3 + Math.random() * 0.4;
+        sc[i * 3] = b * 0.85; sc[i * 3 + 1] = b * 0.88; sc[i * 3 + 2] = b;
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+      g.setAttribute('color', new THREE.BufferAttribute(sc, 3));
+      return g;
+    }
+    const starMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0.0 },
+        uOpacity: { value: 0.7 },
+        fogColor: { value: scene.fog.color },
+        fogDensity: { value: scene.fog.density },
+      },
+      vertexShader: `
+        attribute vec3 color;
+        varying vec3 vColor;
+        varying float vFogFactor;
+        uniform float fogDensity;
+        void main() {
+          vColor = color;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = max(1.5, 25.0 * (1.0 / -mvPosition.z));
+          gl_Position = projectionMatrix * mvPosition;
+          float fogDist = length(mvPosition.xyz);
+          vFogFactor = 1.0 - exp(-(fogDensity * 0.5) * (fogDensity * 0.5) * fogDist * fogDist);
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        varying vec3 vColor;
+        varying float vFogFactor;
+        uniform vec3 fogColor;
+        uniform float uTime;
+        uniform float uOpacity;
+        void main() {
+          float twinkle = sin(uTime * 3.0 + gl_FragCoord.x * 0.05 + gl_FragCoord.y * 0.05) * 0.5 + 0.5;
+          float alpha = uOpacity * mix(0.3, 1.0, twinkle);
+          vec2 cd = gl_PointCoord - vec2(0.5);
+          if (length(cd) > 0.5) discard;
+          vec3 col = mix(vColor, fogColor, vFogFactor);
+          gl_FragColor = vec4(col, alpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    bgLayer1.add(new THREE.Points(createStarLayer(150, 18, 28), starMaterial));
+    bgLayer2.add(new THREE.Points(createStarLayer(250, 28, 45), starMaterial));
+
+    // ── Static bg dots (far layer) ──
+    const bgDotCount = 400;
+    const bgPositions = new Float32Array(bgDotCount * 3);
+    const bgSizes = new Float32Array(bgDotCount);
+    const bgAlphas = new Float32Array(bgDotCount);
+    for (let i = 0; i < bgDotCount; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 50 + Math.random() * 80;
+      bgPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      bgPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      bgPositions[i * 3 + 2] = r * Math.cos(phi);
+      bgSizes[i] = 1.0 + Math.random() * 2.5;
+      bgAlphas[i] = 0.4 + Math.random() * 0.6;
+    }
+    const bgGeom = new THREE.BufferGeometry();
+    bgGeom.setAttribute('position', new THREE.BufferAttribute(bgPositions, 3));
+    bgGeom.setAttribute('aSize', new THREE.BufferAttribute(bgSizes, 1));
+    bgGeom.setAttribute('aAlpha', new THREE.BufferAttribute(bgAlphas, 1));
+    const bgMat = new THREE.ShaderMaterial({
+      uniforms: { uPixelRatio: { value: renderer.getPixelRatio() } },
+      vertexShader: `
+        attribute float aSize;
+        attribute float aAlpha;
+        varying float vAlpha;
+        uniform float uPixelRatio;
+        void main() {
+          vAlpha = aAlpha;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = aSize * uPixelRatio;
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        varying float vAlpha;
+        void main() {
+          float dist = length(gl_PointCoord - vec2(0.5));
+          if (dist > 0.5) discard;
+          float alpha = vAlpha * (1.0 - smoothstep(0.2, 0.5, dist));
+          gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      depthTest: true,
+    });
+    const bgDots = new THREE.Points(bgGeom, bgMat);
+    bgDots.renderOrder = 1;
+    bgLayer3.add(bgDots);
+
+    // ── Nebula dust clouds ──
+    const dustCount = 40;
+    const dustPositions = new Float32Array(dustCount * 3);
+    const dustColors = new Float32Array(dustCount * 3);
+    const dustPalette = [
+      new THREE.Color(0x8a2be2),
+      new THREE.Color(0xff00ff),
+      new THREE.Color(0x00008b),
+      new THREE.Color(0x4b0082),
+    ];
+    for (let i = 0; i < dustCount; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 35 + Math.random() * 45;
+      dustPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      dustPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      dustPositions[i * 3 + 2] = r * Math.cos(phi);
+      const col = dustPalette[Math.floor(Math.random() * dustPalette.length)];
+      dustColors[i * 3] = col.r; dustColors[i * 3 + 1] = col.g; dustColors[i * 3 + 2] = col.b;
+    }
+    const dustGeom = new THREE.BufferGeometry();
+    dustGeom.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+    dustGeom.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
+    const dustMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0.0 },
+        fogColor: { value: scene.fog.color },
+        fogDensity: { value: scene.fog.density },
+      },
+      vertexShader: `
+        attribute vec3 color;
+        varying vec3 vColor;
+        varying float vFogFactor;
+        uniform float fogDensity;
+        void main() {
+          vColor = color;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = max(100.0, 450.0 * (1.0 / -mvPosition.z));
+          gl_Position = projectionMatrix * mvPosition;
+          float fogDist = length(mvPosition.xyz);
+          vFogFactor = 1.0 - exp(-(fogDensity * 1.5) * (fogDensity * 1.5) * fogDist * fogDist);
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        varying vec3 vColor;
+        varying float vFogFactor;
+        uniform vec3 fogColor;
+        uniform float uTime;
+        void main() {
+          float pulse = sin(uTime * 0.3 + gl_FragCoord.x * 0.005 + vColor.r * 8.0) * 0.2 + 0.8;
+          vec2 cd = gl_PointCoord - vec2(0.5);
+          float dist = length(cd);
+          if (dist > 0.5) discard;
+          float alpha = (0.5 - dist) * 2.0;
+          alpha = pow(alpha, 2.5) * 0.18 * pulse;
+          vec3 col = mix(vColor, fogColor, vFogFactor);
+          gl_FragColor = vec4(col, alpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    bgLayer3.add(new THREE.Points(dustGeom, dustMat));
+
+    // ── Proximity labels (DOM, fade in when zoomed close) ──
+    const labelsContainer = document.getElementById('labels-container');
+    const pointLabels = points.map((p) => {
+      const el = document.createElement('div');
+      el.className = 'point-label';
+      el.textContent = p.name;
+      labelsContainer.appendChild(el);
+      return el;
+    });
+    const labelThreshold = 16;
+    const labelVecs = points.map((p) => new THREE.Vector3(p.x, p.y, p.z));
+    const labelVec = new THREE.Vector3();
+
+    // Label dimensions for collision detection — measured once after fonts load
+    const labelWidths = new Array(points.length).fill(0);
+    const labelHeights = new Array(points.length).fill(0);
+    let labelMetricsReady = false;
+    function measureLabels() {
+      for (let i = 0; i < pointLabels.length; i++) {
+        labelWidths[i] = pointLabels[i].offsetWidth;
+        labelHeights[i] = pointLabels[i].offsetHeight;
+      }
+      if (labelWidths[0] > 0) labelMetricsReady = true;
+    }
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(measureLabels);
+    } else {
+      setTimeout(measureLabels, 250);
+    }
+
+    // ── Resize — track globe container, not window ──
+    function onResize() {
+      const s = getGlobeSize();
+      gw = s.w; gh = s.h;
+      camera.aspect = gw / gh;
+      camera.updateProjectionMatrix();
+      renderer.setSize(gw, gh);
+      const dpr = renderer.getPixelRatio();
+      material.uniforms.uPixelRatio.value = dpr;
+      nnMaterial.resolution.set(gw * dpr, gh * dpr);
+    }
+    window.addEventListener('resize', onResize);
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(onResize).observe(globeContainer);
+    }
+
+    // ── Animation loop ──
+    const worldVec = new THREE.Vector3();
+    const identityQuat = new THREE.Quaternion();
+    const driftY = new THREE.Vector3(0, 1, 0);
+    const tmpQuat = new THREE.Quaternion();
+    const _camLocalDir = new THREE.Vector3();
+    const _spriteNormal = new THREE.Vector3();
+    const _lineNormal = new THREE.Vector3();
+    const AUTO_ROTATE_SPEED = 0.0005;
+    const autoRotQuat = new THREE.Quaternion();
+    const autoRotAxis = new THREE.Vector3(0, 1, 0);
+    let animationTime = 0;
+
+    function smoothstepJS(e0, e1, x) {
+      const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0)));
+      return t * t * (3 - 2 * t);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      animationTime += 0.016;
+
+      if (!isDragging && !isPinching) {
+        if (lastTouchTime === 0 || (Date.now() - lastTouchTime > 10000)) {
+          isAutoRotating = true;
+        }
+      }
+      if (isAutoRotating && !isDragging && !isPinching) {
+        autoRotQuat.setFromAxisAngle(autoRotAxis, AUTO_ROTATE_SPEED);
+        group.quaternion.premultiply(autoRotQuat);
+        group.quaternion.normalize();
+      }
+
+      material.uniforms.uTime.value = animationTime;
+      _camLocalDir.copy(camera.position);
+      group.worldToLocal(_camLocalDir);
+      _camLocalDir.normalize();
+      material.uniforms.uCamLocalDir.value.copy(_camLocalDir);
+
+      starMaterial.uniforms.uTime.value = animationTime;
+      dustMat.uniforms.uTime.value = animationTime;
+
+      // KNN line face fade
+      const colAttr = nnGeometry.getAttribute('instanceColorStart');
+      const colAttrEnd = nnGeometry.getAttribute('instanceColorEnd');
+      if (colAttr && colAttrEnd) {
+        const segCount = colAttr.count;
+        for (let i = 0; i < segCount; i++) {
+          _lineNormal.set(origLinePositions[i * 6], origLinePositions[i * 6 + 1], origLinePositions[i * 6 + 2]).normalize();
+          const fStart = smoothstepJS(-0.1, 0.4, _lineNormal.dot(_camLocalDir));
+          _lineNormal.set(origLinePositions[i * 6 + 3], origLinePositions[i * 6 + 4], origLinePositions[i * 6 + 5]).normalize();
+          const fEnd = smoothstepJS(-0.1, 0.4, _lineNormal.dot(_camLocalDir));
+          const a = Math.min(fStart, fEnd);
+          colAttr.setXYZ(i, origLineColors[i * 6] * a, origLineColors[i * 6 + 1] * a, origLineColors[i * 6 + 2] * a);
+          colAttrEnd.setXYZ(i, origLineColors[i * 6 + 3] * a, origLineColors[i * 6 + 4] * a, origLineColors[i * 6 + 5] * a);
+        }
+        colAttr.needsUpdate = true;
+        colAttrEnd.needsUpdate = true;
+      }
+
+      // Parallax bg layer rotation
+      bgLayer1.quaternion.slerpQuaternions(identityQuat, group.quaternion, 0.45);
+      bgLayer2.quaternion.slerpQuaternions(identityQuat, group.quaternion, 0.20);
+      bgLayer3.quaternion.slerpQuaternions(identityQuat, group.quaternion, 0.05);
+      bgLayer1.quaternion.multiply(tmpQuat.setFromAxisAngle(driftY, animationTime * 0.04));
+      bgLayer2.quaternion.multiply(tmpQuat.setFromAxisAngle(driftY, animationTime * 0.02));
+      bgLayer3.quaternion.multiply(tmpQuat.setFromAxisAngle(driftY, animationTime * 0.01));
+
+      group.updateMatrixWorld(true);
+      renderer.render(scene, camera);
+
+      // Proximity label updates
+      const camPos = camera.position;
+      const hw = gw / 2;
+      const hh = gh / 2;
+      // Silhouette threshold — a label on a sphere of radius R is occluded
+      // by the sphere from a camera at distance d when dot(labelDir, camDir) ≤ R/d.
+      const sphereR = 9.5;
+      const camDist = camPos.length();
+      const facingCutoff = Math.min(0.95, sphereR / camDist + 0.04);
+
+      // Phase 1: gather visible candidates with screen rects
+      const candidates = [];
+      for (let i = 0; i < count; i++) {
+        const labelNormal = _spriteNormal.copy(labelVecs[i]).normalize();
+        const labelFacing = labelNormal.dot(_camLocalDir);
+        if (labelFacing < facingCutoff) {
+          pointLabels[i].style.visibility = 'hidden';
+          continue;
+        }
+        worldVec.copy(labelVecs[i]).applyMatrix4(group.matrixWorld);
+        const dist = camPos.distanceTo(worldVec);
+        if (dist >= labelThreshold) {
+          pointLabels[i].style.visibility = 'hidden';
+          continue;
+        }
+        labelVec.copy(worldVec).project(camera);
+        if (labelVec.z > 1) {
+          pointLabels[i].style.visibility = 'hidden';
+          continue;
+        }
+        const sx = (labelVec.x * hw) + hw + 8;
+        const sy = -(labelVec.y * hh) + hh;
+        candidates.push({ i, sx, sy, dist });
+      }
+
+      // Phase 2: sort closest-first, greedily skip overlaps
+      candidates.sort((a, b) => a.dist - b.dist);
+      const kept = [];
+      const PADDING = 3;
+      for (let n = 0; n < candidates.length; n++) {
+        const c = candidates[n];
+        const w = labelMetricsReady ? labelWidths[c.i] : 60;
+        const h = labelMetricsReady ? labelHeights[c.i] : 18;
+        const x1 = c.sx - PADDING;
+        const y1 = c.sy - PADDING;
+        const x2 = c.sx + w + PADDING;
+        const y2 = c.sy + h + PADDING;
+        let collides = false;
+        for (let k = 0; k < kept.length; k++) {
+          const r = kept[k];
+          if (x1 < r.x2 && x2 > r.x1 && y1 < r.y2 && y2 > r.y1) {
+            collides = true;
+            break;
+          }
+        }
+        if (collides) {
+          pointLabels[c.i].style.visibility = 'hidden';
+        } else {
+          kept.push({ x1, y1, x2, y2 });
+          const opacity = 1.0 - (c.dist / labelThreshold);
+          pointLabels[c.i].style.transform = `translate3d(${c.sx}px, ${c.sy}px, 0)`;
+          pointLabels[c.i].style.opacity = String(opacity);
+          pointLabels[c.i].style.visibility = 'visible';
+        }
+      }
+    }
+    animate();
+
+    // ─────────────────────────────────────────────────────────────────────
+    // ── Waitlist form ──
+    // ─────────────────────────────────────────────────────────────────────
+    const form = document.getElementById('waitlist-form');
+    const emailInput = document.getElementById('email-input');
+    const submitBtn = document.getElementById('submit-btn');
+    const formMessage = document.getElementById('form-message');
+
+    function setMessage(text, kind) {
+      formMessage.textContent = text;
+      formMessage.className = kind || '';
+    }
+
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      submitBtn.innerHTML = loading
+        ? '<span class="spinner"></span>Joining...'
+        : 'Join Waitlist';
+    }
+
+    function isValidEmail(s) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      if (!isValidEmail(email)) {
+        setMessage('Please enter a valid email address.', 'error');
+        return;
+      }
+      if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+        setMessage('Backend not configured. See README.md.', 'error');
+        return;
+      }
+
+      setLoading(true);
+      setMessage('', '');
+
+      try {
+        // Use text/plain to avoid CORS preflight on Apps Script
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          form.reset();
+          setMessage("You're on the list. Check your inbox for a confirmation.", 'success');
+        } else if (data.duplicate) {
+          setMessage("You're already on the list.", 'info');
+        } else {
+          setMessage(data.message || 'Something went wrong. Try again?', 'error');
+        }
+      } catch (err) {
+        setMessage('Network error. Try again?', 'error');
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>
