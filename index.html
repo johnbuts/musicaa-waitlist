@@ -180,7 +180,7 @@
       font-weight: 600;
       letter-spacing: 0.01em;
       cursor: pointer;
-      transition: transform 0.12s, opacity 0.18s;
+      transition: transform 0.12s, filter 0.2s, opacity 0.18s;
     }
     /* Shine sweep — same shape & cadence as the SPIN button on the Discover page */
     #submit-btn::before {
@@ -208,6 +208,10 @@
     }
     #submit-btn:hover:not(:disabled) {
       transform: translateY(-1px);
+      filter: brightness(1.08) saturate(1.05);
+    }
+    #submit-btn:hover:not(:disabled)::before {
+      animation-duration: 1.6s;
     }
     #submit-btn:active:not(:disabled) { transform: translateY(0); }
     #submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
