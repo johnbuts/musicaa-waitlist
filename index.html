@@ -63,7 +63,13 @@
       min-height: 0;
       overflow: hidden;
     }
-    #globe canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+    #globe canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+    }
     #globe canvas.grabbing { cursor: grabbing; }
 
     #labels-container {
@@ -426,6 +432,7 @@
     }
 
     renderer.domElement.addEventListener('touchstart', (e) => {
+      if (e.touches.length >= 2) e.preventDefault();
       if (e.touches.length === 1) {
         beginDrag(e.touches[0].clientX, e.touches[0].clientY);
       } else if (e.touches.length === 2) {
@@ -437,9 +444,10 @@
         startCamDist = camera.position.z;
         pinchStartQuat.copy(group.quaternion);
       }
-    }, { passive: true });
+    }, { passive: false });
 
     renderer.domElement.addEventListener('touchmove', (e) => {
+      if (e.touches.length >= 2) e.preventDefault();
       if (isDragging && e.touches.length === 1) {
         updateDrag(e.touches[0].clientX, e.touches[0].clientY);
       } else if (isPinching && e.touches.length === 2) {
@@ -455,7 +463,7 @@
         group.quaternion.premultiply(twistQuat);
         group.quaternion.normalize();
       }
-    }, { passive: true });
+    }, { passive: false });
 
     renderer.domElement.addEventListener('touchend', (e) => {
       if (e.touches.length === 0) {
@@ -465,6 +473,12 @@
         beginDrag(e.touches[0].clientX, e.touches[0].clientY);
       }
     }, { passive: true });
+
+    // Suppress iOS Safari pinch-zoom gesture events globally so they can't
+    // bubble up and zoom the page even if the canvas missed the touch.
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach((ev) => {
+      document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+    });
 
     // ── Mouse handlers (drag + wheel zoom) ──
     renderer.domElement.addEventListener('mousedown', (e) => {
