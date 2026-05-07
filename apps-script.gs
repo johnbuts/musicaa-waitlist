@@ -48,7 +48,7 @@ function doPost(e) {
       const emails = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
       for (let i = 0; i < emails.length; i++) {
         if ((emails[i][0] || '').toString().trim().toLowerCase() === email) {
-          return jsonResponse({ success: false, duplicate: true, message: "You're already on the list." });
+          return jsonResponse({ success: false, duplicate: true, message: "That email is already on the list." });
         }
       }
     }
@@ -106,7 +106,6 @@ function sendConfirmationEmail(email) {
     "You're on the " + APP_NAME + " waitlist.\n\n" +
     "Over 100,000 songs are released every day. " + APP_NAME + " surfaces the actual unique ones based on your taste, not what everyone else is listening to.\n\n" +
     "We'll email you the moment early access opens.\n\n" +
-    "Visit: " + LANDING_PAGE_URL + "\n\n" +
     "— The " + APP_NAME + " team";
 
   GmailApp.sendEmail(email, subject, plain, {
@@ -119,27 +118,29 @@ function buildEmailHtml() {
   return [
     '<!DOCTYPE html>',
     '<html>',
-    '<head><meta charset="UTF-8"><title>You\'re on the list</title></head>',
-    '<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#fff;">',
-    '  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0a0a0a;padding:40px 20px;">',
-    '    <tr><td align="center">',
-    '      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:#141416;border:1px solid rgba(168,85,247,0.18);border-radius:20px;overflow:hidden;">',
-    '        <tr><td style="padding:40px 36px 28px 36px;text-align:center;">',
+    '<head>',
+    '  <meta charset="UTF-8">',
+    '  <meta name="color-scheme" content="dark">',
+    '  <meta name="supported-color-schemes" content="dark">',
+    '  <title>You\'re on the list</title>',
+    '</head>',
+    '<body style="margin:0;padding:0;background-color:#070709;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#ffffff;">',
+    '  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#070709" style="background-color:#070709;padding:40px 20px;">',
+    '    <tr><td align="center" bgcolor="#070709" style="background-color:#070709;">',
+    '      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0f0f12" style="max-width:520px;background-color:#0f0f12;border:1px solid #2a1d4d;border-radius:20px;overflow:hidden;">',
+    '        <tr><td bgcolor="#0f0f12" style="background-color:#0f0f12;padding:40px 36px 22px 36px;text-align:center;">',
     '          <h1 style="margin:0 0 10px 0;font-size:36px;font-weight:800;letter-spacing:-0.02em;color:#c4b5fd;">' + APP_NAME + '</h1>',
-    '          <p style="margin:0;color:rgba(196,181,253,0.85);font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;">You\'re on the list</p>',
+    '          <p style="margin:0;color:#c4b5fd;font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;">You\'re on the list</p>',
     '        </td></tr>',
-    '        <tr><td style="padding:0 36px 12px 36px;text-align:center;">',
-    '          <p style="margin:0;color:rgba(196,181,253,0.85);font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;">Over 100,000 songs are released every day</p>',
+    '        <tr><td bgcolor="#0f0f12" style="background-color:#0f0f12;padding:0 36px 14px 36px;text-align:center;">',
+    '          <p style="margin:0;color:#a78bfa;font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;">Over 100,000 songs are released every day</p>',
     '        </td></tr>',
-    '        <tr><td style="padding:0 36px 28px 36px;color:rgba(255,255,255,0.85);font-size:16px;line-height:1.55;text-align:center;">',
-    '          <p style="margin:0 0 14px 0;">Thanks for joining the ' + APP_NAME + ' waitlist.</p>',
-    '          <p style="margin:0 0 14px 0;">We\'re building ' + APP_NAME + ' to surface the actual unique ones based on your taste — not what everyone else is listening to.</p>',
-    '          <p style="margin:0;color:rgba(255,255,255,0.65);">We\'ll email you the moment early access opens.</p>',
+    '        <tr><td bgcolor="#0f0f12" style="background-color:#0f0f12;padding:0 36px 36px 36px;color:#e5e7eb;font-size:16px;line-height:1.55;text-align:center;">',
+    '          <p style="margin:0 0 14px 0;color:#e5e7eb;">Thanks for joining the ' + APP_NAME + ' waitlist.</p>',
+    '          <p style="margin:0 0 14px 0;color:#e5e7eb;">We\'re building ' + APP_NAME + ' to surface the actual unique ones based on your taste, not what everyone else is listening to.</p>',
+    '          <p style="margin:0;color:#a1a1aa;">We\'ll email you the moment early access opens.</p>',
     '        </td></tr>',
-    '        <tr><td style="padding:0 36px 36px 36px;text-align:center;">',
-    '          <a href="' + LANDING_PAGE_URL + '" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#8B5CF6 0%,#A855F7 100%);color:#fff;text-decoration:none;font-weight:600;font-size:15px;border-radius:12px;">Visit ' + APP_NAME + '</a>',
-    '        </td></tr>',
-    '        <tr><td style="padding:24px 36px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;color:rgba(255,255,255,0.35);font-size:12px;">',
+    '        <tr><td bgcolor="#0f0f12" style="background-color:#0f0f12;padding:20px 36px;border-top:1px solid #1f1f24;text-align:center;color:#71717a;font-size:12px;">',
     '          You received this email because you signed up at <a href="' + LANDING_PAGE_URL + '" style="color:#a855f7;text-decoration:none;">' + LANDING_PAGE_URL.replace(/^https?:\/\//, '') + '</a>.',
     '        </td></tr>',
     '      </table>',

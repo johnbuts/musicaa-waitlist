@@ -260,6 +260,112 @@
     #form-message.error { color: #fca5a5; }
     #form-message.info { color: rgba(255, 255, 255, 0.55); }
 
+    /* Success modal — pops up after a confirmed signup */
+    #success-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(5, 5, 8, 0.65);
+      backdrop-filter: blur(10px) saturate(140%);
+      -webkit-backdrop-filter: blur(10px) saturate(140%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #success-modal.visible { opacity: 1; pointer-events: auto; }
+    .success-card {
+      position: relative;
+      max-width: 440px;
+      width: 100%;
+      padding: 40px 32px 30px 32px;
+      background: rgba(15, 15, 18, 0.96);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 22px;
+      box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.6),
+        0 0 80px rgba(139, 92, 246, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      text-align: center;
+      transform: scale(0.85) translateY(20px);
+      opacity: 0;
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  opacity 0.3s ease;
+    }
+    #success-modal.visible .success-card {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    .success-icon {
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 20px auto;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 28%, rgba(255,255,255,0.4) 0%, transparent 42%),
+        radial-gradient(circle at center, #34d399 0%, #10b981 50%, #047857 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 50px rgba(16, 185, 129, 0.45);
+    }
+    #success-modal.visible .success-icon { animation: success-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both; }
+    @keyframes success-pop {
+      0%   { transform: scale(0); }
+      100% { transform: scale(1); }
+    }
+    .success-icon svg {
+      width: 38px;
+      height: 38px;
+      stroke: #fff;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+    #success-modal.visible .success-icon svg path {
+      stroke-dasharray: 28;
+      stroke-dashoffset: 28;
+      animation: draw-check 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.45s forwards;
+    }
+    @keyframes draw-check {
+      to { stroke-dashoffset: 0; }
+    }
+    .success-card h2 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .success-card p {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.72);
+      line-height: 1.55;
+      margin-bottom: 26px;
+    }
+    .success-close {
+      padding: 13px 36px;
+      background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+      border: none;
+      border-radius: 11px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: filter 0.18s, transform 0.12s;
+    }
+    .success-close:hover { filter: brightness(1.1); }
+    .success-close:active { transform: translateY(1px); }
+
     @media (max-width: 480px) {
       #header { padding: 18px 18px 8px 18px; }
       #header h1 { font-size: 28px; }
@@ -295,6 +401,17 @@
         <p id="form-message"></p>
       </div>
     </section>
+  </div>
+
+  <div id="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title">
+    <div class="success-card">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><path d="M5 12 L10 17 L19 8" /></svg>
+      </div>
+      <h2 id="success-title">You're on the waitlist!</h2>
+      <p>Welcome to Musicaa. Check your inbox for a confirmation email — we'll let you know the moment early access opens.</p>
+      <button type="button" class="success-close" id="success-close-btn">Continue</button>
+    </div>
   </div>
 
   <script type="importmap">
@@ -1152,9 +1269,10 @@
         const data = await res.json();
         if (data.success) {
           form.reset();
-          setMessage("You're on the list. Check your inbox for a confirmation.", 'success');
+          setMessage('', '');
+          showSuccessModal();
         } else if (data.duplicate) {
-          setMessage("You're already on the list.", 'info');
+          setMessage(data.message || "That email is already on the list.", 'info');
         } else {
           setMessage(data.message || 'Something went wrong. Try again?', 'error');
         }
@@ -1163,6 +1281,19 @@
       } finally {
         setLoading(false);
       }
+    });
+
+    // ── Success modal ──
+    const successModal = document.getElementById('success-modal');
+    const successCloseBtn = document.getElementById('success-close-btn');
+    function showSuccessModal() { successModal.classList.add('visible'); }
+    function hideSuccessModal() { successModal.classList.remove('visible'); }
+    successCloseBtn.addEventListener('click', hideSuccessModal);
+    successModal.addEventListener('click', (e) => {
+      if (e.target === successModal) hideSuccessModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && successModal.classList.contains('visible')) hideSuccessModal();
     });
   </script>
 </body>
