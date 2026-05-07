@@ -351,7 +351,7 @@
     let { w: gw, h: gh } = getGlobeSize();
 
     const camera = new THREE.PerspectiveCamera(60, gw / gh, 0.1, 200);
-    const INITIAL_CAM_DIST = 28;
+    const INITIAL_CAM_DIST = 31;
     const MIN_CAM_DIST = 12;
     const MAX_CAM_DIST = 32;
     camera.position.set(0, 0, INITIAL_CAM_DIST);
@@ -383,8 +383,10 @@
     const zAxis = new THREE.Vector3(0, 0, 1);
     const twistQuat = new THREE.Quaternion();
 
-    let lastTouchTime = 0;
-    let isAutoRotating = true;
+    // Pretend a "touch" happened 5s ago so auto-rotate kicks in 5s after page load
+    // (the 10s idle timeout below means: now + 5s = 10s since fake-touch).
+    let lastTouchTime = Date.now() - 5000;
+    let isAutoRotating = false;
 
     function beginDrag(x, y) {
       isDragging = true;
@@ -922,7 +924,7 @@
     const _camLocalDir = new THREE.Vector3();
     const _spriteNormal = new THREE.Vector3();
     const _lineNormal = new THREE.Vector3();
-    const AUTO_ROTATE_SPEED = 0.0005;
+    const AUTO_ROTATE_SPEED = 0.0009;
     const autoRotQuat = new THREE.Quaternion();
     const autoRotAxis = new THREE.Vector3(0, 1, 0);
     let animationTime = 0;
@@ -937,7 +939,7 @@
       animationTime += 0.016;
 
       if (!isDragging && !isPinching) {
-        if (lastTouchTime === 0 || (Date.now() - lastTouchTime > 10000)) {
+        if (Date.now() - lastTouchTime > 10000) {
           isAutoRotating = true;
         }
       }
