@@ -59,19 +59,29 @@ function doPost(e) {
       return jsonResponse({ success: false, message: 'Sheet "' + SPREADSHEET_NAME + '" not found. Bind this script to the correct spreadsheet.' });
     }
 
-    // Check for duplicates (skip header row)
+    // Silent dedup: if the email is already on the list, skip the appendRow
+    // AND skip the email send, but still return success to the user. The
+    // frontend always shows the success modal regardless.
     const lastRow = sheet.getLastRow();
+    let alreadyOnList = false;
     if (lastRow > 1) {
       const emails = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
       for (let i = 0; i < emails.length; i++) {
         if ((emails[i][0] || '').toString().trim().toLowerCase() === email) {
-          return jsonResponse({ success: false, duplicate: true, message: "That email is already on the list." });
+          alreadyOnList = true;
+          break;
         }
       }
     }
 
-    sheet.appendRow([email, new Date(), 'confirmed']);
-    SpreadsheetApp.flush(); // ensure the write is persisted before we send mail
+    if (!alreadyOnList) {
+      sheet.appendRow([email, new Date(), 'confirmed']);
+      SpreadsheetApp.flush();
+    }
+
+    // Stash whether we should send an email — used after the lock releases.
+    // (We can't return early here because we need to release the lock first.)
+    e.__shouldSendEmail = !alreadyOnList;
   } catch (err) {
     Logger.log('Error in critical section: ' + err);
     return jsonResponse({ success: false, message: 'Server error. Try again.' });
@@ -79,12 +89,12 @@ function doPost(e) {
     lock.releaseLock();
   }
 
-  // Email send happens OUTSIDE the lock — it's safe (only one recipient,
-  // doesn't touch the sheet) and we don't want it blocking other signups.
-  try {
-    sendConfirmationEmail(email);
-  } catch (mailErr) {
-    Logger.log('Email send failed for ' + email + ': ' + mailErr);
+  if (e.__shouldSendEmail) {
+    try {
+      sendConfirmationEmail(email);
+    } catch (mailErr) {
+      Logger.log('Email send failed for ' + email + ': ' + mailErr);
+    }
   }
 
   return jsonResponse({ success: true });

@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Musicaa — AI-Powered Music Discovery</title>
+  <title>Musicaa</title>
   <meta name="description" content="Find your next favorite song. Join the waitlist for Musicaa, an AI-powered music discovery app.">
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -506,7 +508,7 @@
     // ─────────────────────────────────────────────────────────────────────
     // CONFIG: paste your Google Apps Script Web App URL here after deploying
     // ─────────────────────────────────────────────────────────────────────
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGREP-qA7-RoCST-VtQfVXCWcDqYppM8VXNkOiOutbn7oUXtYOhnm6se-ObPc04RfE/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwBKIdb2qQPgadDmsci5QRv_zW3xITBkX8g1YH4Lnc9JrsJW-pfyzt_CGtoLHONFdUz/exec';
 
     // ── Genre point processing (ported from lib/genrePoints.ts) ──
     const rawGenres = JSON.parse(document.getElementById('genre-data').textContent);
@@ -1379,7 +1381,7 @@
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
     }
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = emailInput.value.trim();
       if (!isValidEmail(email)) {
@@ -1391,31 +1393,47 @@
         return;
       }
 
+      // Optimistic UI: show the spinner for ~1s for a sense of "submitting,"
+      // then pop the success modal. Fetch fires in parallel; we only roll
+      // back the modal if the backend reports duplicate or a real failure.
       setLoading(true);
       setMessage('', '');
 
-      try {
-        // Use text/plain to avoid CORS preflight on Apps Script
-        const res = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ email }),
-        });
-        const data = await res.json();
-        if (data.success) {
-          form.reset();
-          setMessage('', '');
-          showSuccessModal();
-        } else if (data.duplicate) {
-          setMessage(data.message || "That email is already on the list.", 'info');
-        } else {
-          setMessage(data.message || 'Something went wrong. Try again?', 'error');
-        }
-      } catch (err) {
-        setMessage('Network error. Try again?', 'error');
-      } finally {
+      let resolvedAsError = false;
+      const modalTimer = setTimeout(() => {
+        if (resolvedAsError) return;
         setLoading(false);
-      }
+        showSuccessModal();
+      }, 1000);
+
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // skips CORS preflight
+        body: JSON.stringify({ email }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            form.reset(); // confirmed signup, clear input behind the modal
+            return;
+          }
+          resolvedAsError = true;
+          clearTimeout(modalTimer);
+          setLoading(false);
+          hideSuccessModal();
+          if (data.duplicate) {
+            setMessage(data.message || "That email is already on the list.", 'info');
+          } else {
+            setMessage(data.message || 'Something went wrong. Try again?', 'error');
+          }
+        })
+        .catch(() => {
+          resolvedAsError = true;
+          clearTimeout(modalTimer);
+          setLoading(false);
+          hideSuccessModal();
+          setMessage('Network error. Try again?', 'error');
+        });
     });
 
     // ── Success modal ──
