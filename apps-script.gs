@@ -29,14 +29,31 @@ const FROM_NAME = 'Musicaa';
 // ──────────────────────────────────────────────────────────
 
 function doPost(e) {
+  // Parse + validate first (no shared state touched yet) so we can fail fast
+  // without holding the script lock on bad input.
+  let email;
   try {
     const body = JSON.parse(e.postData.contents);
-    const email = (body.email || '').toString().trim().toLowerCase();
+    email = (body.email || '').toString().trim().toLowerCase();
+  } catch (err) {
+    return jsonResponse({ success: false, message: 'Invalid request body.' });
+  }
 
-    if (!isValidEmail(email)) {
-      return jsonResponse({ success: false, message: 'Invalid email address.' });
-    }
+  if (!isValidEmail(email)) {
+    return jsonResponse({ success: false, message: 'Invalid email address.' });
+  }
 
+  // Serialize the read-then-write critical section so two near-simultaneous
+  // POSTs of the same email can't both pass the dup check and both append.
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000); // up to 15s; plenty for the typical few-ms write
+  } catch (lockErr) {
+    Logger.log('Lock timeout: ' + lockErr);
+    return jsonResponse({ success: false, message: 'Server is busy. Try again.' });
+  }
+
+  try {
     const sheet = getSubscriberSheet();
     if (!sheet) {
       return jsonResponse({ success: false, message: 'Sheet "' + SPREADSHEET_NAME + '" not found. Bind this script to the correct spreadsheet.' });
@@ -54,19 +71,39 @@ function doPost(e) {
     }
 
     sheet.appendRow([email, new Date(), 'confirmed']);
-
-    try {
-      sendConfirmationEmail(email);
-    } catch (mailErr) {
-      // Email send failures shouldn't block signup — they're already on the list.
-      Logger.log('Email send failed: ' + mailErr);
-    }
-
-    return jsonResponse({ success: true });
+    SpreadsheetApp.flush(); // ensure the write is persisted before we send mail
   } catch (err) {
-    Logger.log('Error: ' + err);
+    Logger.log('Error in critical section: ' + err);
     return jsonResponse({ success: false, message: 'Server error. Try again.' });
+  } finally {
+    lock.releaseLock();
   }
+
+  // Email send happens OUTSIDE the lock — it's safe (only one recipient,
+  // doesn't touch the sheet) and we don't want it blocking other signups.
+  try {
+    sendConfirmationEmail(email);
+  } catch (mailErr) {
+    Logger.log('Email send failed for ' + email + ': ' + mailErr);
+  }
+
+  return jsonResponse({ success: true });
+}
+
+/**
+ * Run from the Apps Script editor to enumerate any triggers attached to this
+ * project. Useful for debugging "extra emails" — if anything other than your
+ * doPost is firing, it'll show up here. Delete unwanted ones in the Triggers
+ * tab (clock icon in the left sidebar of the editor).
+ */
+function listProjectTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  Logger.log('Total triggers: ' + triggers.length);
+  triggers.forEach((t, i) => {
+    Logger.log((i + 1) + '. handler=' + t.getHandlerFunction()
+      + ' / event=' + t.getEventType()
+      + ' / source=' + t.getTriggerSource());
+  });
 }
 
 function doGet() {
