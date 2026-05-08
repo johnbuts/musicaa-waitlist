@@ -10,8 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { background: #0a0a0a; }
     html, body {
-      background: #0a0a0a;
       width: 100%;
       height: 100%;
       overflow-x: hidden;
@@ -20,6 +20,13 @@
       font-family: 'Rubik', -apple-system, system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+    }
+    body { background: transparent; }
+    #shader-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
     }
 
     /* Vertical layout: header → globe → form */
@@ -402,6 +409,7 @@
   </style>
 </head>
 <body>
+  <div id="shader-bg"></div>
   <div id="app">
     <header id="header">
       <h1>Musicaa</h1>
@@ -443,7 +451,8 @@
     {
       "imports": {
         "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+        "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/",
+        "@paper-design/shaders": "https://esm.sh/@paper-design/shaders"
       }
     }
   </script>
@@ -455,13 +464,47 @@
     import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
     import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
     import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
-    import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-    import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+    import {
+      ShaderMount,
+      meshGradientFragmentShader,
+      getShaderColorFromString,
+      ShaderFitOptions,
+    } from '@paper-design/shaders';
+
+    // ── Paper Shaders mesh gradient background (visible behind header + form,
+    //    hidden in the middle by the opaque genre globe canvas) ──
+    {
+      const shaderEl = document.getElementById('shader-bg');
+      const meshColors = ['#000000', '#2e0029', '#2e0029', '#2e002d', '#27012d', '#000000', '#000000'];
+      new ShaderMount(
+        shaderEl,
+        meshGradientFragmentShader,
+        {
+          u_colors: meshColors.map(getShaderColorFromString),
+          u_colorsCount: meshColors.length,
+          u_distortion: 0.57,
+          u_swirl: 0.8,
+          u_grainMixer: 0,
+          u_grainOverlay: 0,
+          u_fit: ShaderFitOptions.cover,
+          u_scale: 0.8,
+          u_rotation: 0,
+          u_offsetX: 0,
+          u_offsetY: 0,
+          u_originX: 0.5,
+          u_originY: 0.5,
+          u_worldWidth: 0,
+          u_worldHeight: 0,
+        },
+        undefined,
+        0.44
+      );
+    }
 
     // ─────────────────────────────────────────────────────────────────────
     // CONFIG: paste your Google Apps Script Web App URL here after deploying
     // ─────────────────────────────────────────────────────────────────────
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzj7GcexI3DkPawR4xIkO59H_OhWAm0UGIb0lrp4g6bP6ZimsINT2qm8H6J6mI87IbR/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxeJRYKW8X-F2qR5fONzuBbtxfIt0lJF2QSlLJbkDMdteqzCxAuEFVf9-J9VIENnfea/exec';
 
     // ── Genre point processing (ported from lib/genrePoints.ts) ──
     const rawGenres = JSON.parse(document.getElementById('genre-data').textContent);
@@ -915,38 +958,6 @@
     const pointCloud = new THREE.Points(geometry, material);
     pointCloud.renderOrder = 4;
     group.add(pointCloud);
-
-    // ── 3D "COMING SOON" text above the globe — Hollywood sign style ──
-    const fontLoader = new FontLoader();
-    fontLoader.load('https://unpkg.com/three@0.170.0/examples/fonts/helvetiker_bold.typeface.json', (font) => {
-      const textGeom = new TextGeometry('COMING SOON', {
-        font: font,
-        size: 1.5,
-        depth: 0.3,
-        curveSegments: 12,
-        bevelEnabled: true,
-        bevelThickness: 0.08,
-        bevelSize: 0.05,
-        bevelSegments: 3,
-      });
-      textGeom.computeBoundingBox();
-      textGeom.center();
-      const textMat = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        fog: true,
-        transparent: true,
-        opacity: 1.0,
-      });
-      const textMesh = new THREE.Mesh(textGeom, textMat);
-      // Position along the tilted up-axis (group has -0.4 rad x-tilt) so the
-      // text sits above the visible cap from default view.
-      const TEXT_R = 14.5;
-      textMesh.position.set(0, TEXT_R * Math.cos(0.4), TEXT_R * Math.sin(0.4));
-      textMesh.rotation.x = 0.4;
-      // Render after dots/lines so the text visibly occludes them when in front.
-      textMesh.renderOrder = 100;
-      group.add(textMesh);
-    });
 
     // ── Starfield (3 parallax layers) ──
     function createStarLayer(n, rMin, rMax) {

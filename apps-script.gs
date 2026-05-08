@@ -10,7 +10,7 @@
  *   1. Open the "musicaa waitlist" Google Sheet.
  *   2. Make the first row a header: "Email", "Timestamp", "Status".
  *   3. Extensions → Apps Script. Replace the boilerplate with this file.
- *   4. Edit CONFIG below — set LANDING_PAGE_URL to your GitHub Pages URL.
+ *   4. Edit CONFIG below — set LANDING_PAGE_URL to your live site URL.
  *   5. Click Deploy → New deployment → type "Web app".
  *      - "Execute as": Me
  *      - "Who has access": Anyone
@@ -23,7 +23,7 @@
 
 // ───────────────────────── CONFIG ─────────────────────────
 const SPREADSHEET_NAME = 'musicaa waitlist';
-const LANDING_PAGE_URL = 'https://YOUR_GITHUB_USERNAME.github.io/musicaa-waitlist/';
+const LANDING_PAGE_URL = 'https://musicaa.io';
 const APP_NAME = 'Musicaa';
 const FROM_NAME = 'Musicaa';
 // ──────────────────────────────────────────────────────────
