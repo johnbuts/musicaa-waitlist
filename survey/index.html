@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Musicaa — Quick Survey</title>
+  <meta name="description" content="Two quick questions to help us build Musicaa.">
+  <link rel="icon" type="image/png" href="../icon.png">
+  <link rel="apple-touch-icon" href="../icon.png">
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { background: #0a0a0a; }
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+      color: #fff;
+      font-family: 'Rubik', -apple-system, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    body { background: transparent; }
+
+    #shader-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 36px 20px 60px 20px;
+    }
+
+    /* Back button — top-left, navigates to landing page */
+    #back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 50;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 14px 9px 11px;
+      background: rgba(15, 15, 18, 0.7);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.85);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      backdrop-filter: blur(10px) saturate(140%);
+      -webkit-backdrop-filter: blur(10px) saturate(140%);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+    }
+    #back-btn:hover {
+      background: rgba(25, 22, 35, 0.85);
+      border-color: rgba(168, 85, 247, 0.5);
+      color: #fff;
+      transform: translateX(-1px);
+    }
+    #back-btn:active { transform: translateX(0); }
+    #back-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+    @media (max-width: 480px) {
+      #back-btn { top: 14px; left: 14px; padding: 8px 12px 8px 10px; font-size: 12px; }
+    }
+
+    #header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    #header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+    }
+    #header .subtitle {
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.55);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .card {
+      max-width: 560px;
+      width: 100%;
+      padding: 26px 28px 28px 28px;
+      background: rgba(15, 15, 18, 0.7);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      border-radius: 18px;
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        0 0 60px rgba(139, 92, 246, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      margin-bottom: 18px;
+    }
+
+    .card h2 {
+      font-size: 17px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.92);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    /* ── Q1: provider pills ── */
+    .pill-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .pill {
+      position: relative;
+      padding: 13px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      text-align: center;
+    }
+    .pill:hover { background: rgba(255, 255, 255, 0.07); }
+    .pill.selected {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
+      border-color: rgba(168, 85, 247, 0.7);
+      color: #fff;
+    }
+    #provider-other-input {
+      display: none;
+      margin-top: 12px;
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.18s, background 0.18s;
+    }
+    #provider-other-input.visible { display: block; }
+    #provider-other-input::placeholder { color: rgba(255, 255, 255, 0.35); }
+    #provider-other-input:focus {
+      border-color: rgba(168, 85, 247, 0.55);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    /* ── Q2: 1–10 rating ── */
+    .rating-row {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+    }
+    .rating-btn {
+      padding: 10px 0;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 9px;
+      color: rgba(255, 255, 255, 0.85);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+    }
+    .rating-btn:hover {
+      background: rgba(255, 255, 255, 0.07);
+      transform: translateY(-1px);
+    }
+    .rating-btn.selected {
+      background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+      border-color: transparent;
+      color: #fff;
+    }
+    .rating-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.45);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── Submit button (mirrors landing-page Join Waitlist) ── */
+    #submit-btn {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      max-width: 560px;
+      width: 100%;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: transform 0.12s, filter 0.2s, opacity 0.18s;
+      margin-top: 10px;
+    }
+    /* Shine sweep — same as the landing-page button */
+    #submit-btn::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      bottom: -20px;
+      left: 0;
+      width: 40px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.45) 50%,
+        transparent 100%
+      );
+      transform: skewX(-20deg) translateX(-100px);
+      animation: shine-sweep 3.2s linear infinite;
+      z-index: -1;
+      pointer-events: none;
+    }
+    @keyframes shine-sweep {
+      0%   { transform: skewX(-20deg) translateX(-100px); }
+      75%  { transform: skewX(-20deg) translateX(900px); }
+      100% { transform: skewX(-20deg) translateX(900px); }
+    }
+    /* Hover: wet green orb grows from center and fills the button */
+    #submit-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background:
+        radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.0) 42%),
+        radial-gradient(circle at center, #10b981 0%, #047857 45%, #064e3b 80%, #022c22 100%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: -1;
+      pointer-events: none;
+    }
+    #submit-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    #submit-btn:hover:not(:disabled)::after {
+      transform: translate(-50%, -50%) scale(1.5);
+    }
+    #submit-btn:hover:not(:disabled)::before {
+      animation-duration: 1.6s;
+    }
+    #submit-btn:active:not(:disabled) { transform: translateY(0); }
+    #submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    #submit-btn:disabled::before { animation-play-state: paused; }
+    #submit-btn .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.94);
+      z-index: 90;
+      max-width: 380px;
+      width: max-content;
+      padding: 18px 26px;
+      background: rgba(15, 15, 18, 0.92);
+      border: 1px solid rgba(168, 85, 247, 0.32);
+      border-radius: 16px;
+      backdrop-filter: blur(16px) saturate(140%);
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.55),
+        0 0 60px rgba(139, 92, 246, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      font-size: 15px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.92);
+      text-align: center;
+      line-height: 1.4;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s linear 0.3s;
+    }
+    #toast.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, -50%) scale(1);
+      transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s linear 0s;
+    }
+    #toast.error { border-color: rgba(252, 165, 165, 0.45); color: #fecaca; }
+
+    /* ── Success modal (matches landing page) ── */
+    #success-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(5, 5, 8, 0.65);
+      backdrop-filter: blur(10px) saturate(140%);
+      -webkit-backdrop-filter: blur(10px) saturate(140%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #success-modal.visible { opacity: 1; pointer-events: auto; }
+    .success-card {
+      position: relative;
+      max-width: 440px;
+      width: 100%;
+      padding: 40px 32px 30px 32px;
+      background: rgba(15, 15, 18, 0.96);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 22px;
+      box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.6),
+        0 0 80px rgba(139, 92, 246, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      text-align: center;
+      transform: scale(0.85) translateY(20px);
+      opacity: 0;
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  opacity 0.3s ease;
+    }
+    #success-modal.visible .success-card {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    .success-icon {
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 20px auto;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 28%, rgba(255,255,255,0.4) 0%, transparent 42%),
+        radial-gradient(circle at center, #34d399 0%, #10b981 50%, #047857 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 50px rgba(16, 185, 129, 0.45);
+    }
+    #success-modal.visible .success-icon { animation: success-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both; }
+    @keyframes success-pop {
+      0%   { transform: scale(0); }
+      100% { transform: scale(1); }
+    }
+    .success-icon svg {
+      width: 38px;
+      height: 38px;
+      stroke: #fff;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+    #success-modal.visible .success-icon svg path {
+      stroke-dasharray: 28;
+      stroke-dashoffset: 28;
+      animation: draw-check 0.5s cubic-bezier(0.65, 0, 0.35, 1) 0.45s forwards;
+    }
+    @keyframes draw-check {
+      to { stroke-dashoffset: 0; }
+    }
+    .success-card h2 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .success-card p {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.72);
+      line-height: 1.55;
+      margin-bottom: 26px;
+    }
+    .success-close {
+      padding: 13px 36px;
+      background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+      border: none;
+      border-radius: 11px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: filter 0.18s, transform 0.12s;
+    }
+    .success-close:hover { filter: brightness(1.1); }
+    .success-close:active { transform: translateY(1px); }
+
+    @media (max-width: 480px) {
+      #app { padding: 24px 14px 40px 14px; }
+      #header h1 { font-size: 26px; }
+      #header .subtitle { font-size: 11px; }
+      .card { padding: 20px 18px; }
+      .card h2 { font-size: 16px; }
+      .pill { padding: 12px 10px; font-size: 13px; }
+      .rating-btn { padding: 9px 0; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="shader-bg"></div>
+
+  <a id="back-btn" href="../index.html" aria-label="Back to home">
+    <svg viewBox="0 0 24 24"><path d="M15 18 L9 12 L15 6" /></svg>
+    Back
+  </a>
+
+  <div id="app">
+    <header id="header">
+      <h1>Help us build Musicaa</h1>
+      <div class="subtitle">Two quick questions</div>
+    </header>
+
+    <form id="survey-form" novalidate>
+      <div class="card">
+        <h2>Which music service do you use most?</h2>
+        <div class="pill-grid" id="provider-grid">
+          <button type="button" class="pill" data-value="spotify">Spotify</button>
+          <button type="button" class="pill" data-value="apple_music">Apple Music</button>
+          <button type="button" class="pill" data-value="youtube_music">YouTube Music</button>
+          <button type="button" class="pill" data-value="other">Other</button>
+        </div>
+        <input type="text" id="provider-other-input" placeholder="Which one?" maxlength="60">
+      </div>
+
+      <div class="card">
+        <h2>How easily do you find new music you actually love?</h2>
+        <div class="rating-row" id="rating-row">
+          <button type="button" class="rating-btn" data-value="1">1</button>
+          <button type="button" class="rating-btn" data-value="2">2</button>
+          <button type="button" class="rating-btn" data-value="3">3</button>
+          <button type="button" class="rating-btn" data-value="4">4</button>
+          <button type="button" class="rating-btn" data-value="5">5</button>
+          <button type="button" class="rating-btn" data-value="6">6</button>
+          <button type="button" class="rating-btn" data-value="7">7</button>
+          <button type="button" class="rating-btn" data-value="8">8</button>
+          <button type="button" class="rating-btn" data-value="9">9</button>
+          <button type="button" class="rating-btn" data-value="10">10</button>
+        </div>
+        <div class="rating-labels">
+          <span>Rarely</span>
+          <span>Always</span>
+        </div>
+      </div>
+
+      <button id="submit-btn" type="submit">Submit</button>
+    </form>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <div id="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title">
+    <div class="success-card">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><path d="M5 12 L10 17 L19 8" /></svg>
+      </div>
+      <h2 id="success-title">Thanks — that's it!</h2>
+      <p>We appreciate it. Your answers help shape what we're building.</p>
+      <button type="button" class="success-close" id="success-home-btn">Back to home</button>
+    </div>
+  </div>
+
+  <script src="../config.js"></script>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "@paper-design/shaders": "https://esm.sh/@paper-design/shaders"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import {
+      ShaderMount,
+      meshGradientFragmentShader,
+      getShaderColorFromString,
+      ShaderFitOptions,
+    } from '@paper-design/shaders';
+
+    // Mesh gradient bg — same preset as the landing page
+    {
+      const shaderEl = document.getElementById('shader-bg');
+      const meshColors = ['#000000', '#2e0029', '#2e0029', '#2e002d', '#27012d', '#000000', '#000000'];
+      new ShaderMount(
+        shaderEl,
+        meshGradientFragmentShader,
+        {
+          u_colors: meshColors.map(getShaderColorFromString),
+          u_colorsCount: meshColors.length,
+          u_distortion: 0.57,
+          u_swirl: 0.8,
+          u_grainMixer: 0,
+          u_grainOverlay: 0,
+          u_fit: ShaderFitOptions.cover,
+          u_scale: 0.8,
+          u_rotation: 0,
+          u_offsetX: 0,
+          u_offsetY: 0,
+          u_originX: 0.5,
+          u_originY: 0.5,
+          u_worldWidth: 0,
+          u_worldHeight: 0,
+        },
+        undefined,
+        0.44
+      );
+    }
+
+    const APPS_SCRIPT_URL = window.MUSICAA_CONFIG.APPS_SCRIPT_URL;
+
+    // ── Q1 state: provider selection ──
+    let selectedProvider = '';
+    const providerGrid = document.getElementById('provider-grid');
+    const otherInput = document.getElementById('provider-other-input');
+    providerGrid.querySelectorAll('.pill').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        providerGrid.querySelectorAll('.pill').forEach((b) => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedProvider = btn.dataset.value;
+        if (selectedProvider === 'other') {
+          otherInput.classList.add('visible');
+          otherInput.focus();
+        } else {
+          otherInput.classList.remove('visible');
+          otherInput.value = '';
+        }
+      });
+    });
+
+    // ── Q2 state: 1–10 rating ──
+    let selectedRating = 0;
+    const ratingRow = document.getElementById('rating-row');
+    ratingRow.querySelectorAll('.rating-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        ratingRow.querySelectorAll('.rating-btn').forEach((b) => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedRating = parseInt(btn.dataset.value, 10);
+      });
+    });
+
+    // ── Toast helper ──
+    const toastEl = document.getElementById('toast');
+    let toastTimer = null;
+    function showToast(text, kind) {
+      if (!text) return;
+      toastEl.textContent = text;
+      toastEl.className = '';
+      if (kind) toastEl.classList.add(kind);
+      void toastEl.offsetWidth;
+      toastEl.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('visible'), 3500);
+    }
+
+    // ── Success modal ──
+    const successModal = document.getElementById('success-modal');
+    document.getElementById('success-home-btn').addEventListener('click', () => {
+      window.location.href = '../index.html';
+    });
+    function showSuccessModal() { successModal.classList.add('visible'); }
+    function hideSuccessModal() { successModal.classList.remove('visible'); }
+
+    // ── Submit ──
+    const submitBtn = document.getElementById('submit-btn');
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      submitBtn.innerHTML = loading
+        ? '<span class="spinner"></span>Submitting...'
+        : 'Submit';
+    }
+
+    document.getElementById('survey-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // Allow incomplete submissions — empty fields just write blank cells
+      // to the user's row in the sheet.
+
+      // Silent email link from sessionStorage (set on the landing page after signup).
+      let email = '';
+      try { email = sessionStorage.getItem('musicaa_email') || ''; } catch (e) {}
+
+      const payload = {
+        type: 'survey',
+        email: email,
+        musicProvider: selectedProvider || '',
+        providerOther: selectedProvider === 'other' ? otherInput.value.trim() : '',
+        findNewMusicRating: selectedRating || '',
+      };
+
+      // Optimistic UI: 1s spinner → success modal. Fetch fires in parallel,
+      // only rolls back on real failure.
+      setLoading(true);
+      let resolvedAsError = false;
+      const modalTimer = setTimeout(() => {
+        if (resolvedAsError) return;
+        setLoading(false);
+        showSuccessModal();
+      }, 1000);
+
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) return;
+          resolvedAsError = true;
+          clearTimeout(modalTimer);
+          setLoading(false);
+          hideSuccessModal();
+          showToast(data.message || 'Something went wrong. Try again?', 'error');
+        })
+        .catch(() => {
+          resolvedAsError = true;
+          clearTimeout(modalTimer);
+          setLoading(false);
+          hideSuccessModal();
+          showToast('Network error. Try again?', 'error');
+        });
+    });
+  </script>
+</body>
+</html>

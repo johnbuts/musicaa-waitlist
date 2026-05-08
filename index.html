@@ -447,9 +447,11 @@
       </div>
       <h2 id="success-title">You're on the waitlist!</h2>
       <p>Welcome to Musicaa. Check your inbox for a confirmation email — we'll let you know the moment early access opens.</p>
-      <button type="button" class="success-close" id="success-close-btn">Continue</button>
+      <button type="button" class="success-close" id="success-survey-btn">Continue</button>
     </div>
   </div>
+
+  <script src="config.js"></script>
 
   <script type="importmap">
     {
@@ -508,7 +510,7 @@
     // ─────────────────────────────────────────────────────────────────────
     // CONFIG: paste your Google Apps Script Web App URL here after deploying
     // ─────────────────────────────────────────────────────────────────────
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwBKIdb2qQPgadDmsci5QRv_zW3xITBkX8g1YH4Lnc9JrsJW-pfyzt_CGtoLHONFdUz/exec';
+    const APPS_SCRIPT_URL = window.MUSICAA_CONFIG.APPS_SCRIPT_URL;
 
     // ── Genre point processing (ported from lib/genrePoints.ts) ──
     const rawGenres = JSON.parse(document.getElementById('genre-data').textContent);
@@ -1413,6 +1415,10 @@
       setLoading(true);
       setMessage('', '');
 
+      // Persist email so the /survey page can silently link the response
+      // back to this signup (no email field shown on the survey itself).
+      try { sessionStorage.setItem('musicaa_email', email); } catch (e) {}
+
       let resolvedAsError = false;
       const modalTimer = setTimeout(() => {
         if (resolvedAsError) return;
@@ -1452,10 +1458,12 @@
 
     // ── Success modal ──
     const successModal = document.getElementById('success-modal');
-    const successCloseBtn = document.getElementById('success-close-btn');
+    const successSurveyBtn = document.getElementById('success-survey-btn');
     function showSuccessModal() { successModal.classList.add('visible'); }
     function hideSuccessModal() { successModal.classList.remove('visible'); }
-    successCloseBtn.addEventListener('click', hideSuccessModal);
+    successSurveyBtn.addEventListener('click', () => {
+      window.location.href = 'survey/index.html';
+    });
     successModal.addEventListener('click', (e) => {
       if (e.target === successModal) hideSuccessModal();
     });

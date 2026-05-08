@@ -29,16 +29,20 @@ const FROM_NAME = 'Musicaa';
 // ──────────────────────────────────────────────────────────
 
 function doPost(e) {
-  // Parse + validate first (no shared state touched yet) so we can fail fast
-  // without holding the script lock on bad input.
-  let email;
+  // Parse the body once and branch by request type. The same Web app URL
+  // handles both the email signup ('signup' or no type) and the survey.
+  let body;
   try {
-    const body = JSON.parse(e.postData.contents);
-    email = (body.email || '').toString().trim().toLowerCase();
+    body = JSON.parse(e.postData.contents);
   } catch (err) {
     return jsonResponse({ success: false, message: 'Invalid request body.' });
   }
 
+  if (body && body.type === 'survey') {
+    return handleSurvey(body);
+  }
+
+  const email = (body.email || '').toString().trim().toLowerCase();
   if (!isValidEmail(email)) {
     return jsonResponse({ success: false, message: 'Invalid email address.' });
   }
@@ -138,6 +142,62 @@ function getSubscriberSheet() {
 
 function isValidEmail(s) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
+
+/**
+ * Survey responses go into columns 4-6 of the SAME ROW as the user's email
+ * in the main waitlist sheet (Music Provider | Provider Other | Rating).
+ * Empty fields are written as blanks (incomplete submissions are allowed).
+ * If the email isn't found (or is empty — direct visit to /survey), we
+ * silently no-op and still return success so the UI flows normally.
+ */
+function handleSurvey(body) {
+  const sheet = getSubscriberSheet();
+  if (!sheet) {
+    return jsonResponse({ success: false, message: 'Sheet "' + SPREADSHEET_NAME + '" not found.' });
+  }
+
+  const email = (body.email || '').toString().trim().toLowerCase();
+  const provider = (body.musicProvider || '').toString().trim();
+  const providerOther = (body.providerOther || '').toString().trim();
+  const ratingRaw = body.findNewMusicRating;
+  const rating = (ratingRaw === '' || ratingRaw == null) ? '' : parseInt(ratingRaw, 10);
+
+  if (!email) {
+    // No email to link with (direct visit). Nothing to update; just succeed.
+    return jsonResponse({ success: true });
+  }
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+  } catch (lockErr) {
+    Logger.log('Survey lock timeout: ' + lockErr);
+    return jsonResponse({ success: false, message: 'Server busy. Try again.' });
+  }
+
+  try {
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      const emails = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (let i = 0; i < emails.length; i++) {
+        if ((emails[i][0] || '').toString().trim().toLowerCase() === email) {
+          // Found the row — write provider, providerOther, rating into cols D, E, F.
+          sheet.getRange(i + 2, 4, 1, 3).setValues([[provider, providerOther, rating]]);
+          SpreadsheetApp.flush();
+          break;
+        }
+      }
+      // If not found, silently no-op. User sees success regardless.
+    }
+  } catch (err) {
+    Logger.log('Survey update failed for ' + email + ': ' + err);
+    // Don't surface to user — they've already seen the success modal.
+  } finally {
+    lock.releaseLock();
+  }
+
+  return jsonResponse({ success: true });
 }
 
 function jsonResponse(obj) {
