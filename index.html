@@ -504,7 +504,7 @@
     // ─────────────────────────────────────────────────────────────────────
     // CONFIG: paste your Google Apps Script Web App URL here after deploying
     // ─────────────────────────────────────────────────────────────────────
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykLkHpkKqiBHGk1B9TboDnRVVtyWFOmETX4u-3Ro7IMkK5iX-k5umpDW3f3kKDR_6d/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGREP-qA7-RoCST-VtQfVXCWcDqYppM8VXNkOiOutbn7oUXtYOhnm6se-ObPc04RfE/exec';
 
     // ── Genre point processing (ported from lib/genrePoints.ts) ──
     const rawGenres = JSON.parse(document.getElementById('genre-data').textContent);
@@ -1331,6 +1331,39 @@
     function setMessage(text, kind) {
       if (!text) return;
       showToast(text, kind);
+    }
+
+    // ── #share hash handler — when arriving from the email's "Share Musicaa"
+    //    button, copy the site URL to clipboard and toast the user. ──
+    if (location.hash === '#share') {
+      // Strip the hash so a refresh doesn't re-trigger.
+      history.replaceState(null, '', location.pathname + location.search);
+      const shareLink = location.origin + '/';
+      const tryCopy = () => {
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          showToast('Copy this link: ' + shareLink, 'info');
+          return;
+        }
+        navigator.clipboard.writeText(shareLink).then(() => {
+          showToast('Link copied! Share it with anyone.', 'info');
+        }).catch(() => {
+          // Some browsers require an explicit user gesture; show a one-tap fallback.
+          showToast('Tap to copy ' + shareLink, 'info');
+          toastEl.style.pointerEvents = 'auto';
+          toastEl.style.cursor = 'pointer';
+          const onClick = () => {
+            navigator.clipboard.writeText(shareLink).then(() => {
+              showToast('Link copied!', 'info');
+            });
+            toastEl.style.pointerEvents = 'none';
+            toastEl.style.cursor = '';
+            toastEl.removeEventListener('click', onClick);
+          };
+          toastEl.addEventListener('click', onClick);
+        });
+      };
+      // Slight delay so the toast feels intentional rather than a flash on load.
+      setTimeout(tryCopy, 250);
     }
 
     function setLoading(loading) {
