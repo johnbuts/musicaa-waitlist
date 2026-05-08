@@ -115,6 +115,13 @@ function sendConfirmationEmail(email) {
 }
 
 function buildEmailHtml() {
+  const shareText = 'I just joined the ' + APP_NAME + ' waitlist — find your next favorite song with AI.';
+  const xUrl        = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(LANDING_PAGE_URL);
+  const whatsappUrl = 'https://wa.me/?text=' + encodeURIComponent(shareText + ' ' + LANDING_PAGE_URL);
+  const mailUrl     = 'mailto:?subject=' + encodeURIComponent('Check out ' + APP_NAME) + '&body=' + encodeURIComponent(shareText + '\n\n' + LANDING_PAGE_URL);
+
+  const btnStyle = 'display:inline-block;padding:11px 20px;background-color:#1a1029;border:1px solid #3b1d4f;border-radius:10px;color:#c4b5fd;font-size:13px;font-weight:600;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;';
+
   return [
     '<!DOCTYPE html>',
     '<html>',
@@ -129,16 +136,26 @@ function buildEmailHtml() {
     '    <tr><td align="center" bgcolor="#070709" style="background-color:#070709;">',
     '      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0f0f12" style="max-width:520px;background-color:#0f0f12;border:1px solid #2a1d4d;border-radius:20px;overflow:hidden;">',
     '        <tr><td bgcolor="#0f0f12" style="background-color:#0f0f12;padding:40px 36px 22px 36px;text-align:center;">',
-    '          <h1 style="margin:0 0 10px 0;font-size:36px;font-weight:800;letter-spacing:-0.02em;color:#c4b5fd;">' + APP_NAME + '</h1>',
+    '          <h1 style="margin:0 0 10px 0;font-size:36px;font-weight:800;letter-spacing:-0.02em;color:#ffffff;">' + APP_NAME + '</h1>',
     '          <p style="margin:0;color:#c4b5fd;font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;">You\'re on the list</p>',
     '        </td></tr>',
     '        <tr><td bgcolor="#0f0f12" style="background-color:#0f0f12;padding:0 36px 14px 36px;text-align:center;">',
     '          <p style="margin:0;color:#a78bfa;font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;">Over 100,000 songs are released every day</p>',
     '        </td></tr>',
-    '        <tr><td bgcolor="#0f0f12" style="background-color:#0f0f12;padding:0 36px 36px 36px;color:#e5e7eb;font-size:16px;line-height:1.55;text-align:center;">',
-    '          <p style="margin:0 0 14px 0;color:#e5e7eb;">Thanks for joining the ' + APP_NAME + ' waitlist.</p>',
-    '          <p style="margin:0 0 14px 0;color:#e5e7eb;">We\'re building ' + APP_NAME + ' to surface the actual unique ones based on your taste, not what everyone else is listening to.</p>',
-    '          <p style="margin:0;color:#a1a1aa;">We\'ll email you the moment early access opens.</p>',
+    '        <tr><td bgcolor="#0f0f12" style="background-color:#0f0f12;padding:0 36px 28px 36px;color:#ffffff;font-size:16px;line-height:1.55;text-align:center;">',
+    '          <p style="margin:0 0 14px 0;color:#ffffff;">Thanks for joining the ' + APP_NAME + ' waitlist.</p>',
+    '          <p style="margin:0 0 14px 0;color:#ffffff;">We\'re building ' + APP_NAME + ' to surface the actual unique ones based on your taste, not what everyone else is listening to.</p>',
+    '          <p style="margin:0;color:#c4b5fd;">We\'ll email you the moment early access opens.</p>',
+    '        </td></tr>',
+    '        <tr><td bgcolor="#0f0f12" style="background-color:#0f0f12;padding:8px 36px 32px 36px;text-align:center;border-top:1px solid #1f1f24;">',
+    '          <p style="margin:18px 0 14px 0;color:#a1a1aa;font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;">Help us spread the word</p>',
+    '          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">',
+    '            <tr>',
+    '              <td style="padding:4px;"><a href="' + xUrl + '" target="_blank" style="' + btnStyle + '">Share on X</a></td>',
+    '              <td style="padding:4px;"><a href="' + whatsappUrl + '" target="_blank" style="' + btnStyle + '">WhatsApp</a></td>',
+    '              <td style="padding:4px;"><a href="' + mailUrl + '" style="' + btnStyle + '">Email</a></td>',
+    '            </tr>',
+    '          </table>',
     '        </td></tr>',
     '        <tr><td bgcolor="#0f0f12" style="background-color:#0f0f12;padding:20px 36px;border-top:1px solid #1f1f24;text-align:center;color:#71717a;font-size:12px;">',
     '          You received this email because you signed up at <a href="' + LANDING_PAGE_URL + '" style="color:#a855f7;text-decoration:none;">' + LANDING_PAGE_URL.replace(/^https?:\/\//, '') + '</a>.',

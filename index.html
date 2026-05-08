@@ -589,7 +589,7 @@
     const camera = new THREE.PerspectiveCamera(60, gw / gh, 0.1, 200);
     const INITIAL_CAM_DIST = 32;
     const MIN_CAM_DIST = 14;
-    const MAX_CAM_DIST = 40;
+    const MAX_CAM_DIST = 55;
     camera.position.set(0, 0, INITIAL_CAM_DIST);
     camera.lookAt(0, 0, 0);
 
@@ -1181,6 +1181,28 @@
     const autoRotAxis = new THREE.Vector3(0, 1, 0);
     let animationTime = 0;
 
+    // Parallax bg state — accumulate scaled deltas of group rotation per frame
+    const bgLayer1Quat = new THREE.Quaternion();
+    const bgLayer2Quat = new THREE.Quaternion();
+    const bgLayer3Quat = new THREE.Quaternion();
+    const lastGroupQuat = new THREE.Quaternion();
+    const invLastGroupQuat = new THREE.Quaternion();
+    const deltaQuat = new THREE.Quaternion();
+    const scaledDelta = new THREE.Quaternion();
+
+    function scaleQuatRotation(q, fraction, out) {
+      const w = Math.max(-1, Math.min(1, q.w));
+      const angle = 2 * Math.acos(w);
+      if (angle < 1e-6) { out.set(0, 0, 0, 1); return out; }
+      const s = Math.sqrt(Math.max(0, 1 - w * w));
+      if (s < 1e-6) { out.set(0, 0, 0, 1); return out; }
+      const ax = q.x / s, ay = q.y / s, az = q.z / s;
+      const halfNew = (angle * fraction) * 0.5;
+      const sh = Math.sin(halfNew);
+      out.set(ax * sh, ay * sh, az * sh, Math.cos(halfNew));
+      return out;
+    }
+
     function smoothstepJS(e0, e1, x) {
       const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0)));
       return t * t * (3 - 2 * t);
@@ -1232,13 +1254,24 @@
         colAttrEnd.needsUpdate = true;
       }
 
-      // Parallax bg layer rotation
-      bgLayer1.quaternion.slerpQuaternions(identityQuat, group.quaternion, 0.45);
-      bgLayer2.quaternion.slerpQuaternions(identityQuat, group.quaternion, 0.20);
-      bgLayer3.quaternion.slerpQuaternions(identityQuat, group.quaternion, 0.05);
-      bgLayer1.quaternion.multiply(tmpQuat.setFromAxisAngle(driftY, animationTime * 0.04));
-      bgLayer2.quaternion.multiply(tmpQuat.setFromAxisAngle(driftY, animationTime * 0.02));
-      bgLayer3.quaternion.multiply(tmpQuat.setFromAxisAngle(driftY, animationTime * 0.01));
+      // Parallax bg layer rotation — accumulate scaled deltas of the group's
+      // rotation each frame. Avoids slerp's "shortest-arc" flip when the
+      // group's quaternion w-component crosses zero (which caused a visible
+      // jolt past ~180° of rotation).
+      invLastGroupQuat.copy(lastGroupQuat).invert();
+      deltaQuat.copy(invLastGroupQuat).multiply(group.quaternion).normalize();
+      lastGroupQuat.copy(group.quaternion);
+
+      scaleQuatRotation(deltaQuat, 0.45, scaledDelta);
+      bgLayer1Quat.multiply(scaledDelta).normalize();
+      scaleQuatRotation(deltaQuat, 0.20, scaledDelta);
+      bgLayer2Quat.multiply(scaledDelta).normalize();
+      scaleQuatRotation(deltaQuat, 0.05, scaledDelta);
+      bgLayer3Quat.multiply(scaledDelta).normalize();
+
+      bgLayer1.quaternion.copy(bgLayer1Quat).multiply(tmpQuat.setFromAxisAngle(driftY, animationTime * 0.04));
+      bgLayer2.quaternion.copy(bgLayer2Quat).multiply(tmpQuat.setFromAxisAngle(driftY, animationTime * 0.02));
+      bgLayer3.quaternion.copy(bgLayer3Quat).multiply(tmpQuat.setFromAxisAngle(driftY, animationTime * 0.01));
 
       group.updateMatrixWorld(true);
       renderer.render(scene, camera);
