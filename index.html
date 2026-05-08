@@ -414,7 +414,7 @@
 
     <section id="form-section">
       <div id="info-card">
-        <p class="stat">Over 100,000 songs are released every day</p>
+        <p class="stat">Over 100,000 songs are released every single day</p>
         <p class="tagline">Get actual unique songs based on your taste, not what everyone else is listening to.</p>
       </div>
       <div id="form-card">
@@ -455,6 +455,8 @@
     import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
     import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
     import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+    import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+    import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
     // ─────────────────────────────────────────────────────────────────────
     // CONFIG: paste your Google Apps Script Web App URL here after deploying
@@ -913,6 +915,38 @@
     const pointCloud = new THREE.Points(geometry, material);
     pointCloud.renderOrder = 4;
     group.add(pointCloud);
+
+    // ── 3D "COMING SOON" text above the globe — Hollywood sign style ──
+    const fontLoader = new FontLoader();
+    fontLoader.load('https://unpkg.com/three@0.170.0/examples/fonts/helvetiker_bold.typeface.json', (font) => {
+      const textGeom = new TextGeometry('COMING SOON', {
+        font: font,
+        size: 1.5,
+        depth: 0.3,
+        curveSegments: 12,
+        bevelEnabled: true,
+        bevelThickness: 0.08,
+        bevelSize: 0.05,
+        bevelSegments: 3,
+      });
+      textGeom.computeBoundingBox();
+      textGeom.center();
+      const textMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        fog: true,
+        transparent: true,
+        opacity: 1.0,
+      });
+      const textMesh = new THREE.Mesh(textGeom, textMat);
+      // Position along the tilted up-axis (group has -0.4 rad x-tilt) so the
+      // text sits above the visible cap from default view.
+      const TEXT_R = 14.5;
+      textMesh.position.set(0, TEXT_R * Math.cos(0.4), TEXT_R * Math.sin(0.4));
+      textMesh.rotation.x = 0.4;
+      // Render after dots/lines so the text visibly occludes them when in front.
+      textMesh.renderOrder = 100;
+      group.add(textMesh);
+    });
 
     // ── Starfield (3 parallax layers) ──
     function createStarLayer(n, rMin, rMax) {
