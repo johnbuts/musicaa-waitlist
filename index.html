@@ -586,7 +586,15 @@
     const globeContainer = document.getElementById('globe');
     function getGlobeSize() {
       const r = globeContainer.getBoundingClientRect();
-      return { w: Math.max(1, r.width), h: Math.max(1, r.height) };
+      // Fallback to viewport dimensions if the container hasn't laid out
+      // yet (rare race where the module script runs before layout settles
+      // — e.g. while Rubik is still loading from Google Fonts). Without
+      // this, renderer.setSize(1, 1) writes inline style="width:1px;
+      // height:1px" on the canvas which overrides the CSS rule and
+      // strands it at 1px even after onResize fires later.
+      const w = r.width > 1 ? r.width : window.innerWidth;
+      const h = r.height > 1 ? r.height : window.innerHeight;
+      return { w: Math.max(1, w), h: Math.max(1, h) };
     }
     let { w: gw, h: gh } = getGlobeSize();
 
@@ -1170,6 +1178,12 @@
     window.addEventListener('resize', onResize);
     if (typeof ResizeObserver !== 'undefined') {
       new ResizeObserver(onResize).observe(globeContainer);
+    }
+    // Belt-and-suspenders: trigger another resize after the page is fully
+    // loaded and after fonts settle, in case the layout shifted afterwards.
+    window.addEventListener('load', onResize);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(onResize);
     }
 
     // ── Animation loop ──
