@@ -487,7 +487,7 @@
       const rangeX = maxX - minX || 1;
       const rangeY = maxY - minY || 1;
       const rangeZ = maxZ - minZ || 1;
-      const RADIUS = 9.8;
+      const RADIUS = 12.5;
 
       return data.map((g) => {
         const nx = ((g.x - minX) / rangeX) * 2 - 1;
@@ -542,9 +542,9 @@
     let { w: gw, h: gh } = getGlobeSize();
 
     const camera = new THREE.PerspectiveCamera(60, gw / gh, 0.1, 200);
-    const INITIAL_CAM_DIST = 31;
-    const MIN_CAM_DIST = 12;
-    const MAX_CAM_DIST = 32;
+    const INITIAL_CAM_DIST = 32;
+    const MIN_CAM_DIST = 14;
+    const MAX_CAM_DIST = 40;
     camera.position.set(0, 0, INITIAL_CAM_DIST);
     camera.lookAt(0, 0, 0);
 
@@ -690,7 +690,11 @@
       e.preventDefault();
       isAutoRotating = false;
       lastTouchTime = Date.now();
-      const factor = Math.exp(e.deltaY * 0.001);
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) dy *= 40;
+      else if (e.deltaMode === 2) dy *= 800;
+      dy = Math.max(-300, Math.min(300, dy));
+      const factor = Math.exp(dy * 0.003);
       const newDist = Math.max(MIN_CAM_DIST, Math.min(MAX_CAM_DIST, camera.position.z * factor));
       camera.position.z = newDist;
     }, { passive: false });
@@ -728,35 +732,26 @@
         fogColor: { value: scene.fog.color },
         fogDensity: { value: scene.fog.density },
         uCamLocalDir: { value: new THREE.Vector3(0, 0, 1) },
+        uFacingCutoff: { value: 0.4 },
       },
       vertexShader: `
         varying vec3 vColor;
         varying float vFogFactor;
         varying float vFacing;
-        varying float vPulse;
         uniform float uPixelRatio;
         uniform float uDotSize;
         uniform float uTime;
         uniform float fogDensity;
         uniform vec3 uCamLocalDir;
+        uniform float uFacingCutoff;
         void main() {
           vColor = color;
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           vec3 normal = normalize(position);
           vFacing = dot(normal, uCamLocalDir);
-          float facingAlpha = smoothstep(-0.1, 0.4, vFacing);
+          float facingAlpha = smoothstep(uFacingCutoff - 0.06, uFacingCutoff + 0.02, vFacing);
 
-          // Position-hashed phase — decouples pulse from color so neighbors desync
-          float seed = fract(sin(dot(position.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
-          float phase = seed * 6.2831853;
-
-          // Slow cosine breath (C∞ smooth) + faint shimmer
-          float breath = 0.5 - 0.5 * cos(uTime * 1.1 + phase);
-          float shimmer = sin(uTime * 5.0 + phase * 1.7) * 0.04;
-          float pulse = mix(0.78, 1.30, breath) + shimmer;
-
-          // Remap to [0..1] for fragment use (brightness + halo coupling)
-          vPulse = clamp((pulse - 0.78) / 0.52, 0.0, 1.0);
+          float pulse = sin(uTime * 4.0 + color.r * 15.0 + color.g * 10.0) * 0.4 + 1.0;
 
           gl_PointSize = 24.0 * uDotSize * uPixelRatio * pulse * (1.0 / -mvPosition.z) * 5.0;
           gl_PointSize = clamp(gl_PointSize, 3.0, 60.0);
@@ -771,28 +766,22 @@
         varying vec3 vColor;
         varying float vFogFactor;
         varying float vFacing;
-        varying float vPulse;
         uniform vec3 fogColor;
         uniform float uBrightness;
         uniform float uOpacity;
+        uniform float uFacingCutoff;
 
         void main() {
           vec2 coord = gl_PointCoord - vec2(0.5);
           float dist = length(coord);
+          float sdf = dist - 0.48;
+          float w = fwidth(sdf);
+          float alpha = 1.0 - smoothstep(-w, w, sdf);
 
-          // Crisp inner disc + soft outer halo that blooms with the pulse
-          float core = 1.0 - smoothstep(0.42, 0.50, dist);
-          float halo = 1.0 - smoothstep(0.20, 0.50, dist);
-          halo = pow(halo, 2.2) * (0.30 + vPulse * 0.40);
-          float alpha = max(core, halo);
-
-          // Direct RGB intensity — preserves hue + saturation. Capped at 1.0
-          // so the color never pushes toward white at peak.
-          float intensity = clamp(uBrightness * (0.45 + vPulse * 0.35), 0.0, 1.0);
-          vec3 col = vColor * intensity;
+          vec3 col = clamp(vColor * uBrightness, 0.0, 1.0);
           col = mix(col, fogColor, vFogFactor);
 
-          float facingAlpha = smoothstep(-0.1, 0.4, vFacing);
+          float facingAlpha = smoothstep(uFacingCutoff - 0.06, uFacingCutoff + 0.02, vFacing);
           alpha *= uOpacity * facingAlpha;
           if (alpha < 0.01) discard;
           gl_FragColor = vec4(col, alpha);
@@ -801,6 +790,7 @@
       vertexColors: true,
       transparent: true,
       depthWrite: false,
+      depthTest: false,
     });
 
     // ── KNN connecting lines ──
@@ -827,15 +817,57 @@
         const key = minIdx + ',' + maxIdx;
         if (!addedLines.has(key)) {
           addedLines.add(key);
-          nnLinePositions.push(
-            ax, ay, az,
-            positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2]
-          );
-          nnLineColors.push(
-            colors[i * 3], colors[i * 3 + 1], colors[i * 3 + 2],
-            colors[j * 3], colors[j * 3 + 1], colors[j * 3 + 2]
-          );
-          lineSegmentPairs.push(i, j);
+          // Subdivide along the great-circle arc so the polyline follows the
+          // sphere surface instead of cutting through it as a chord.
+          const SUBDIVS = 8;
+          const bx = positions[j * 3], by = positions[j * 3 + 1], bz = positions[j * 3 + 2];
+          const aLen = Math.sqrt(ax * ax + ay * ay + az * az) || 1;
+          const bLen = Math.sqrt(bx * bx + by * by + bz * bz) || 1;
+          const R = (aLen + bLen) * 0.5;
+          const aux = ax / aLen, auy = ay / aLen, auz = az / aLen;
+          const bux = bx / bLen, buy = by / bLen, buz = bz / bLen;
+          let dotProd = aux * bux + auy * buy + auz * buz;
+          dotProd = Math.max(-1, Math.min(1, dotProd));
+          const omega = Math.acos(dotProd);
+          const sinOmega = Math.sin(omega);
+          const cri = colors[i * 3], cgi = colors[i * 3 + 1], cbi = colors[i * 3 + 2];
+          const crj = colors[j * 3], cgj = colors[j * 3 + 1], cbj = colors[j * 3 + 2];
+          const arcPts = [];
+          const arcCols = [];
+          for (let s = 0; s <= SUBDIVS; s++) {
+            const t = s / SUBDIVS;
+            let px, py, pz;
+            if (sinOmega < 0.0001) {
+              px = ax * (1 - t) + bx * t;
+              py = ay * (1 - t) + by * t;
+              pz = az * (1 - t) + bz * t;
+            } else {
+              const w1 = Math.sin((1 - t) * omega) / sinOmega;
+              const w2 = Math.sin(t * omega) / sinOmega;
+              px = (w1 * aux + w2 * bux) * R;
+              py = (w1 * auy + w2 * buy) * R;
+              pz = (w1 * auz + w2 * buz) * R;
+            }
+            arcPts.push(px, py, pz);
+            arcCols.push(
+              cri * (1 - t) + crj * t,
+              cgi * (1 - t) + cgj * t,
+              cbi * (1 - t) + cbj * t
+            );
+          }
+          for (let s = 0; s < SUBDIVS; s++) {
+            const o0 = s * 3;
+            const o1 = (s + 1) * 3;
+            nnLinePositions.push(
+              arcPts[o0], arcPts[o0 + 1], arcPts[o0 + 2],
+              arcPts[o1], arcPts[o1 + 1], arcPts[o1 + 2]
+            );
+            nnLineColors.push(
+              arcCols[o0], arcCols[o0 + 1], arcCols[o0 + 2],
+              arcCols[o1], arcCols[o1 + 1], arcCols[o1 + 2]
+            );
+            lineSegmentPairs.push(i, j);
+          }
         }
       }
     }
@@ -862,7 +894,7 @@
     group.add(nnLines);
 
     // ── Sphere occluder so back-facing dots/lines don't bleed through ──
-    const sphereGeom = new THREE.SphereGeometry(9.5, 64, 64);
+    const sphereGeom = new THREE.SphereGeometry(12.45, 64, 64);
     const sphereMat = new THREE.MeshBasicMaterial({
       color: 0x1a1a1a,
       transparent: false,
@@ -870,6 +902,9 @@
       depthWrite: true,
       depthTest: true,
       fog: true,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
     });
     const sphere = new THREE.Mesh(sphereGeom, sphereMat);
     sphere.renderOrder = 3;
@@ -1068,26 +1103,9 @@
       labelsContainer.appendChild(el);
       return el;
     });
-    const labelThreshold = 16;
+    const labelThreshold = 10;
     const labelVecs = points.map((p) => new THREE.Vector3(p.x, p.y, p.z));
     const labelVec = new THREE.Vector3();
-
-    // Label dimensions for collision detection — measured once after fonts load
-    const labelWidths = new Array(points.length).fill(0);
-    const labelHeights = new Array(points.length).fill(0);
-    let labelMetricsReady = false;
-    function measureLabels() {
-      for (let i = 0; i < pointLabels.length; i++) {
-        labelWidths[i] = pointLabels[i].offsetWidth;
-        labelHeights[i] = pointLabels[i].offsetHeight;
-      }
-      if (labelWidths[0] > 0) labelMetricsReady = true;
-    }
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(measureLabels);
-    } else {
-      setTimeout(measureLabels, 250);
-    }
 
     // ── Resize — track globe container, not window ──
     function onResize() {
@@ -1143,6 +1161,10 @@
       group.worldToLocal(_camLocalDir);
       _camLocalDir.normalize();
       material.uniforms.uCamLocalDir.value.copy(_camLocalDir);
+      // Dynamic silhouette cutoff: dots beyond R/d are behind the visible
+      // hemisphere and must fade to 0 (no depth-test to occlude them).
+      const _camDist = camera.position.length();
+      material.uniforms.uFacingCutoff.value = _camDist > 0 ? Math.min(0.95, 12.5 / _camDist) : 0.4;
 
       starMaterial.uniforms.uTime.value = animationTime;
       dustMat.uniforms.uTime.value = animationTime;
@@ -1176,22 +1198,13 @@
       group.updateMatrixWorld(true);
       renderer.render(scene, camera);
 
-      // Proximity label updates
+      // Proximity labels
       const camPos = camera.position;
       const hw = gw / 2;
       const hh = gh / 2;
-      // Silhouette threshold — a label on a sphere of radius R is occluded
-      // by the sphere from a camera at distance d when dot(labelDir, camDir) ≤ R/d.
-      const sphereR = 9.5;
-      const camDist = camPos.length();
-      const facingCutoff = Math.min(0.95, sphereR / camDist + 0.04);
-
-      // Phase 1: gather visible candidates with screen rects
-      const candidates = [];
       for (let i = 0; i < count; i++) {
         const labelNormal = _spriteNormal.copy(labelVecs[i]).normalize();
-        const labelFacing = labelNormal.dot(_camLocalDir);
-        if (labelFacing < facingCutoff) {
+        if (labelNormal.dot(_camLocalDir) < 0.2) {
           pointLabels[i].style.visibility = 'hidden';
           continue;
         }
@@ -1208,39 +1221,10 @@
         }
         const sx = (labelVec.x * hw) + hw + 8;
         const sy = -(labelVec.y * hh) + hh;
-        candidates.push({ i, sx, sy, dist });
-      }
-
-      // Phase 2: sort closest-first, greedily skip overlaps
-      candidates.sort((a, b) => a.dist - b.dist);
-      const kept = [];
-      const PADDING = 3;
-      for (let n = 0; n < candidates.length; n++) {
-        const c = candidates[n];
-        const w = labelMetricsReady ? labelWidths[c.i] : 60;
-        const h = labelMetricsReady ? labelHeights[c.i] : 18;
-        const x1 = c.sx - PADDING;
-        const y1 = c.sy - PADDING;
-        const x2 = c.sx + w + PADDING;
-        const y2 = c.sy + h + PADDING;
-        let collides = false;
-        for (let k = 0; k < kept.length; k++) {
-          const r = kept[k];
-          if (x1 < r.x2 && x2 > r.x1 && y1 < r.y2 && y2 > r.y1) {
-            collides = true;
-            break;
-          }
-        }
-        if (collides) {
-          pointLabels[c.i].style.visibility = 'hidden';
-        } else {
-          kept.push({ x1, y1, x2, y2 });
-          // Floor opacity at 0.6 — labels stay readable even near the fade threshold
-          const opacity = Math.max(0.6, 1.0 - (c.dist / labelThreshold));
-          pointLabels[c.i].style.transform = `translate3d(${c.sx}px, ${c.sy}px, 0)`;
-          pointLabels[c.i].style.opacity = String(opacity);
-          pointLabels[c.i].style.visibility = 'visible';
-        }
+        const opacity = Math.max(0.6, 1.0 - (dist / labelThreshold));
+        pointLabels[i].style.transform = `translate3d(${sx}px, ${sy}px, 0)`;
+        pointLabels[i].style.opacity = String(opacity);
+        pointLabels[i].style.visibility = 'visible';
       }
     }
     animate();
