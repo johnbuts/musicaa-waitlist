@@ -460,7 +460,7 @@
 <body>
   <div id="shader-bg"></div>
 
-  <a id="back-btn" href="../index.html" aria-label="Back to home">
+  <a id="back-btn" href="../" aria-label="Back to home">
     <svg viewBox="0 0 24 24"><path d="M15 18 L9 12 L15 6" /></svg>
     Back
   </a>
@@ -615,8 +615,13 @@
 
     // ── Success modal ──
     const successModal = document.getElementById('success-modal');
+    // Use a relative dir path for clean URL on the deployed site (musicaa.io
+    // → index.html auto-loads). file:// browsers don't auto-load index.html
+    // in directory navigation, so fall back to the explicit file there.
+    const HOME_URL = location.protocol === 'file:' ? '../index.html' : '../';
+    document.getElementById('back-btn').setAttribute('href', HOME_URL);
     document.getElementById('success-home-btn').addEventListener('click', () => {
-      window.location.href = '../index.html';
+      window.location.href = HOME_URL;
     });
     function showSuccessModal() { successModal.classList.add('visible'); }
     function hideSuccessModal() { successModal.classList.remove('visible'); }
