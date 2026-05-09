@@ -1461,8 +1461,12 @@
     const successSurveyBtn = document.getElementById('success-survey-btn');
     function showSuccessModal() { successModal.classList.add('visible'); }
     function hideSuccessModal() { successModal.classList.remove('visible'); }
+    // Clean URL on the deployed site (musicaa.io/survey/), with file://
+    // fallback to the explicit file since browsers don't auto-load
+    // index.html when navigating to a directory locally.
+    const SURVEY_URL = location.protocol === 'file:' ? 'survey/index.html' : 'survey/';
     successSurveyBtn.addEventListener('click', () => {
-      window.location.href = 'survey/index.html';
+      window.location.href = SURVEY_URL;
     });
     successModal.addEventListener('click', (e) => {
       if (e.target === successModal) hideSuccessModal();
