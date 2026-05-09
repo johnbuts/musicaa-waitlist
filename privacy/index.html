@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Musicaa — Privacy Policy</title>
+  <meta name="description" content="How Musicaa collects and uses email addresses for waitlist updates.">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" href="../icon.png">
+  <link rel="apple-touch-icon" href="../icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { background: #0a0a0a; }
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+      color: #fff;
+      font-family: 'Rubik', -apple-system, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    body { background: transparent; }
+
+    #shader-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 64px 20px 60px 20px;
+    }
+
+    /* Back button — top-left, matches /survey */
+    #back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 50;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: rgba(15, 15, 18, 0.7);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      backdrop-filter: blur(10px) saturate(140%);
+      -webkit-backdrop-filter: blur(10px) saturate(140%);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+    }
+    #back-btn:hover {
+      background: rgba(25, 22, 35, 0.85);
+      border-color: rgba(168, 85, 247, 0.5);
+      color: #fff;
+      transform: translateX(-1px);
+    }
+    #back-btn:active { transform: translateX(0); }
+    #back-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+    @media (max-width: 480px) {
+      #back-btn { top: 18px; left: 14px; width: 34px; height: 34px; }
+    }
+
+    #header {
+      text-align: center;
+      margin-bottom: 28px;
+      max-width: 640px;
+    }
+    #header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+    }
+    #header .subtitle {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .doc {
+      max-width: 640px;
+      width: 100%;
+      padding: 32px 32px 30px 32px;
+      background: rgba(15, 15, 18, 0.7);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      border-radius: 18px;
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        0 0 60px rgba(139, 92, 246, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .doc section + section { margin-top: 22px; }
+    .doc h2 {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #c4b5fd;
+      margin-bottom: 10px;
+    }
+    .doc p, .doc li {
+      font-size: 15px;
+      line-height: 1.65;
+      color: rgba(255, 255, 255, 0.82);
+    }
+    .doc p + p { margin-top: 10px; }
+    .doc ul {
+      margin-top: 8px;
+      padding-left: 20px;
+    }
+    .doc li + li { margin-top: 6px; }
+    .doc a {
+      color: #c4b5fd;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(196, 181, 253, 0.35);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .doc a:hover {
+      color: #fff;
+      border-bottom-color: rgba(255, 255, 255, 0.6);
+    }
+    .doc strong { color: #fff; font-weight: 600; }
+
+    @media (max-width: 480px) {
+      #app { padding: 64px 14px 40px 14px; }
+      #header h1 { font-size: 26px; }
+      .doc { padding: 24px 20px; }
+      .doc p, .doc li { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="shader-bg"></div>
+
+  <a id="back-btn" href="../" aria-label="Back to home">
+    <svg viewBox="0 0 24 24"><path d="M15 18 L9 12 L15 6" /></svg>
+  </a>
+
+  <div id="app">
+    <header id="header">
+      <h1>Privacy Policy</h1>
+      <div class="subtitle">Last updated May 9, 2026</div>
+    </header>
+
+    <article class="doc">
+      <section>
+        <p>Musicaa is a music discovery app currently in pre-launch. This page explains what we collect when you join the waitlist, why we collect it, and how we handle it. Plain language, no boilerplate.</p>
+      </section>
+
+      <section>
+        <h2>What we collect</h2>
+        <ul>
+          <li><strong>Your email address</strong>, when you join the waitlist on the home page.</li>
+          <li><strong>Optional survey responses</strong>, if you fill in the post-signup survey (which music service you use, and a 1&ndash;10 rating about how easy it is to find new music). The survey is optional &mdash; skipping it doesn't affect your spot on the waitlist.</li>
+          <li><strong>A timestamp</strong> of when you signed up, so we know the order to send early-access invites.</li>
+        </ul>
+        <p>We don't ask for your name, location, payment info, or anything else. We don't run analytics, advertising pixels, or tracking cookies on this site.</p>
+      </section>
+
+      <section>
+        <h2>Why we collect it</h2>
+        <p>One reason: <strong>to send you updates about Musicaa.</strong> That means progress notes while we build the app and a notification the moment early access opens. The optional survey responses help us decide which features to prioritize.</p>
+        <p>We won't email you about anything else, and we won't sell, rent, or share your email with anyone outside Musicaa.</p>
+      </section>
+
+      <section>
+        <h2>Where it's stored</h2>
+        <p>Waitlist signups are stored in a private Google Sheet that only the Musicaa team can access. Confirmation emails are sent through Gmail. That's the entire stack &mdash; we don't use any third-party CRM, ad platform, or data broker.</p>
+      </section>
+
+      <section>
+        <h2>How long we keep it</h2>
+        <p>We keep your email until either (a) Musicaa launches and you've decided whether to use it, or (b) you ask us to delete it &mdash; whichever comes first. If we ever shut the project down, we'll delete the entire list.</p>
+      </section>
+
+      <section>
+        <h2>Your rights</h2>
+        <p>You can ask us to:</p>
+        <ul>
+          <li><strong>Show you the data we have on you</strong> (it's just your email, signup timestamp, and any optional survey answers).</li>
+          <li><strong>Delete it permanently.</strong> We'll do this within 30 days and confirm by email.</li>
+          <li><strong>Stop emailing you</strong> without deleting your data &mdash; useful if you want to stay on the list but pause updates.</li>
+        </ul>
+        <p>Email <a href="mailto:teams@musicaa.io">teams@musicaa.io</a> for any of the above. Include the email address you signed up with so we can find your record.</p>
+      </section>
+
+      <section>
+        <h2>Children</h2>
+        <p>Musicaa isn't directed at children under 13. If you believe a child has signed up, email us and we'll remove the record.</p>
+      </section>
+
+      <section>
+        <h2>Changes to this policy</h2>
+        <p>If we change how we handle data, we'll update this page and bump the &ldquo;Last updated&rdquo; date at the top. For material changes &mdash; like adding a new way we use your email &mdash; we'll also email everyone on the list before the change takes effect.</p>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <p>Questions about this policy or your data: <a href="mailto:teams@musicaa.io">teams@musicaa.io</a>.</p>
+      </section>
+    </article>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "@paper-design/shaders": "https://esm.sh/@paper-design/shaders"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import {
+      ShaderMount,
+      meshGradientFragmentShader,
+      getShaderColorFromString,
+      ShaderFitOptions,
+    } from '@paper-design/shaders';
+
+    // Same mesh gradient as / and /survey for visual continuity.
+    const shaderEl = document.getElementById('shader-bg');
+    const meshColors = ['#000000', '#2e0029', '#2e0029', '#2e002d', '#27012d', '#000000', '#000000'];
+    new ShaderMount(
+      shaderEl,
+      meshGradientFragmentShader,
+      {
+        u_colors: meshColors.map(getShaderColorFromString),
+        u_colorsCount: meshColors.length,
+        u_distortion: 0.57,
+        u_swirl: 0.8,
+        u_grainMixer: 0,
+        u_grainOverlay: 0,
+        u_fit: ShaderFitOptions.cover,
+        u_scale: 0.8,
+        u_rotation: 0,
+        u_offsetX: 0,
+        u_offsetY: 0,
+        u_originX: 0.5,
+        u_originY: 0.5,
+        u_worldWidth: 0,
+        u_worldHeight: 0,
+      },
+      undefined,
+      0.44
+    );
+  </script>
+</body>
+</html>
