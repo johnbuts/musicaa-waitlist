@@ -51,15 +51,13 @@
       z-index: 50;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 9px 14px 9px 11px;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
       background: rgba(15, 15, 18, 0.7);
       border: 1px solid rgba(168, 85, 247, 0.25);
       border-radius: 10px;
       color: rgba(255, 255, 255, 0.85);
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 500;
       text-decoration: none;
       backdrop-filter: blur(10px) saturate(140%);
       -webkit-backdrop-filter: blur(10px) saturate(140%);
@@ -83,7 +81,7 @@
       fill: none;
     }
     @media (max-width: 480px) {
-      #back-btn { top: 18px; left: 14px; padding: 8px 12px 8px 10px; font-size: 12px; }
+      #back-btn { top: 18px; left: 14px; width: 34px; height: 34px; }
     }
 
     #header {
@@ -462,7 +460,6 @@
 
   <a id="back-btn" href="../" aria-label="Back to home">
     <svg viewBox="0 0 24 24"><path d="M15 18 L9 12 L15 6" /></svg>
-    Back
   </a>
 
   <div id="app">
