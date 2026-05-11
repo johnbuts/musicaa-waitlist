@@ -99,6 +99,17 @@ function doPost(e) {
     } catch (mailErr) {
       Logger.log('Email send failed for ' + email + ': ' + mailErr);
     }
+    // Fire the server-side Meta Conversions API event ONLY on a brand-new
+    // signup (matches the email-send dedup behavior) and only if the client
+    // included fb metadata. Failures here don't surface to the user — the
+    // signup itself has already succeeded.
+    if (body && body.fb) {
+      try {
+        sendCapiCompleteRegistration(email, body.fb);
+      } catch (capiErr) {
+        Logger.log('CAPI send failed for ' + email + ': ' + capiErr);
+      }
+    }
   }
 
   return jsonResponse({ success: true });
@@ -265,4 +276,75 @@ function buildEmailHtml() {
     '</body>',
     '</html>'
   ].join('\n');
+}
+
+// ─────────────────────────── Meta Conversions API ───────────────────────────
+// Server-side counterpart to the browser-side Meta Pixel call in index.html.
+// Both events carry the same event_id so Meta deduplicates them as a single
+// CompleteRegistration. CAPI tends to land more reliably because ad blockers,
+// iOS ATT, and Safari ITP frequently block the browser-side Pixel ping.
+//
+// Required Script Properties (Project Settings → Script Properties):
+//   META_PIXEL_ID        — your 15–16 digit Pixel ID (same as in config.js)
+//   META_CAPI_TOKEN      — the CAPI access token from Events Manager
+// Optional:
+//   META_CAPI_TEST_CODE  — a TESTxxxxx code from Events Manager → Test Events,
+//                          used only during initial verification. Delete after.
+function sendCapiCompleteRegistration(email, fb) {
+  var props = PropertiesService.getScriptProperties();
+  var pixelId = props.getProperty('META_PIXEL_ID');
+  var token   = props.getProperty('META_CAPI_TOKEN');
+  if (!pixelId || !token) {
+    Logger.log('CAPI not configured — set META_PIXEL_ID and META_CAPI_TOKEN in Script Properties.');
+    return;
+  }
+
+  // Meta requires lowercased, trimmed, SHA-256 hashed email in user_data.em.
+  var emHash = sha256Hex(String(email).toLowerCase().trim());
+
+  var userData = {
+    em: [emHash],
+    client_user_agent: fb.userAgent || ''
+  };
+  if (fb.fbp) userData.fbp = fb.fbp;
+  if (fb.fbc) userData.fbc = fb.fbc;
+
+  var payload = {
+    data: [{
+      event_name:       'CompleteRegistration',
+      event_time:       parseInt(fb.eventTime, 10),
+      event_id:         fb.eventId,
+      action_source:    'website',
+      event_source_url: fb.sourceUrl || LANDING_PAGE_URL,
+      user_data:        userData
+    }]
+  };
+
+  var testCode = props.getProperty('META_CAPI_TEST_CODE');
+  if (testCode) payload.test_event_code = testCode;
+
+  var url = 'https://graph.facebook.com/v21.0/' + pixelId
+          + '/events?access_token=' + encodeURIComponent(token);
+
+  var res = UrlFetchApp.fetch(url, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  });
+  // Log the response code + body but NEVER the token. Apps Script execution
+  // logs are private to the project owner, but treating them as if they
+  // weren't is the right hygiene.
+  Logger.log('CAPI response ' + res.getResponseCode() + ': ' + res.getContentText());
+}
+
+function sha256Hex(input) {
+  var bytes = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256, input, Utilities.Charset.UTF_8);
+  var hex = '';
+  for (var i = 0; i < bytes.length; i++) {
+    var b = bytes[i] & 0xff;
+    hex += ('0' + b.toString(16)).slice(-2);
+  }
+  return hex;
 }

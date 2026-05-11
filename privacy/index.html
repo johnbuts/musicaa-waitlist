@@ -172,7 +172,7 @@
   <div id="app">
     <header id="header">
       <h1>Privacy Policy</h1>
-      <div class="subtitle">Last updated May 9, 2026</div>
+      <div class="subtitle">Last updated May 11, 2026</div>
     </header>
 
     <article class="doc">
@@ -187,7 +187,7 @@
           <li><strong>Optional survey responses</strong>, if you fill in the post-signup survey (which music service you use, and a 1&ndash;10 rating about how easy it is to find new music). The survey is optional &mdash; skipping it doesn't affect your spot on the waitlist.</li>
           <li><strong>A timestamp</strong> of when you signed up, so we know the order to send early-access invites.</li>
         </ul>
-        <p>We don't ask for your name, location, payment info, or anything else. We don't run analytics, advertising pixels, or tracking cookies on this site.</p>
+        <p>We don't ask for your name, location, payment info, or anything else.</p>
       </section>
 
       <section>
@@ -198,7 +198,18 @@
 
       <section>
         <h2>Where it's stored</h2>
-        <p>Waitlist signups are stored in a private Google Sheet that only the Musicaa team can access. Confirmation emails are sent through Gmail. That's the entire stack &mdash; we don't use any third-party CRM, ad platform, or data broker.</p>
+        <p>Waitlist signups are stored in a private Google Sheet that only the Musicaa team can access. Confirmation emails are sent through Gmail.</p>
+      </section>
+
+      <section>
+        <h2>Advertising measurement (Meta)</h2>
+        <p>We run ads on Facebook and Instagram to find people who might want Musicaa. To know which ads are working, we tell Meta when someone signs up &mdash; that's the only event we share. We do this two ways:</p>
+        <ul>
+          <li><strong>Meta Pixel</strong> &mdash; a small script that runs in your browser when you visit the home page. It sets a cookie and pings Meta if you submit the waitlist form.</li>
+          <li><strong>Meta Conversions API</strong> &mdash; a server-to-server notification we send from our backend when a signup succeeds.</li>
+        </ul>
+        <p><strong>What Meta receives:</strong> your email address (SHA-256 hashed before it leaves us &mdash; Meta can never read it in plain text), the page URL, your user agent, and the Meta cookies that Meta itself set on you. We never share your survey responses, your unhashed email, or anything else.</p>
+        <p><strong>How to opt out:</strong> use your browser's tracking-prevention setting (Safari and Firefox enable this by default), block <code>connect.facebook.net</code> in any ad blocker, or visit your <a href="https://www.facebook.com/adpreferences/ad_settings" target="_blank" rel="noopener">Meta ad preferences page</a>. Server-side events (Conversions API) can be opted out of by deleting your record entirely &mdash; email <a href="mailto:teams@musicaa.io">teams@musicaa.io</a>.</p>
       </section>
 
       <section>

@@ -453,6 +453,23 @@
 
   <script src="config.js"></script>
 
+  <!-- Meta Pixel — uses MUSICAA_CONFIG.META_PIXEL_ID; no-op if missing.
+       The matching server-side CAPI call lives in apps-script.gs and shares
+       an event_id with the browser-side track call so Meta dedupes them. -->
+  <script>
+    (function () {
+      var id = (window.MUSICAA_CONFIG && window.MUSICAA_CONFIG.META_PIXEL_ID) || '';
+      if (!id) return;
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+      document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', id);
+      fbq('track', 'PageView');
+    })();
+  </script>
+
   <script type="importmap">
     {
       "imports": {
@@ -1419,6 +1436,32 @@
       // back to this signup (no email field shown on the survey itself).
       try { sessionStorage.setItem('musicaa_email', email); } catch (e) {}
 
+      // ── Meta Pixel + CAPI dedup ──────────────────────────────────────
+      // Generate one shared event_id used by both the browser-side Pixel
+      // call below AND the server-side CAPI call from apps-script.gs.
+      // Meta dedupes events with matching (event_name, event_id) so this
+      // single CompleteRegistration is counted once even if it arrives
+      // from both channels.
+      const fbEventId = 'reg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+      if (window.fbq) {
+        // Re-init with email so Meta's Automatic Advanced Matching hashes
+        // and attaches it client-side, boosting Event Match Quality.
+        fbq('init', window.MUSICAA_CONFIG.META_PIXEL_ID, { em: email });
+        fbq('track', 'CompleteRegistration', {}, { eventID: fbEventId });
+      }
+      const readCookie = (name) => {
+        const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]+)'));
+        return m ? decodeURIComponent(m[1]) : null;
+      };
+      const fbMeta = {
+        eventId: fbEventId,
+        eventTime: Math.floor(Date.now() / 1000),
+        userAgent: navigator.userAgent,
+        sourceUrl: location.href,
+        fbp: readCookie('_fbp'),
+        fbc: readCookie('_fbc'),
+      };
+
       let resolvedAsError = false;
       const modalTimer = setTimeout(() => {
         if (resolvedAsError) return;
@@ -1429,7 +1472,7 @@
       fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // skips CORS preflight
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, fb: fbMeta }),
       })
         .then((res) => res.json())
         .then((data) => {
