@@ -8,6 +8,6 @@
 // page source); the matching CAPI access token is the actual secret and
 // lives only in Apps Script Script Properties.
 window.MUSICAA_CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyK4Zn7XetPHnxXw2QNXkcIYV1cxsMuCjtoPbMkGhpkVTmpEOXOY28MCOG3xZdU0Lgq/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwJUOwgVxHr3BSIz91kdkQ6XOSNLH_kz1oQaw65att2YO96IJt7dOe6gzFyxd4FIcKX/exec',
   META_PIXEL_ID: '1527680395728389',
 };
