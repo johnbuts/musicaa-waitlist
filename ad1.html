@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Musicaa — Ad Mocks (local only)</title>
+  <link rel="icon" type="image/png" href="icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* Visual scale for the page preview only — frames still render at their full
+       CSS pixel size (1080×1080, etc.) so the download produces a spec-accurate PNG.
+       Adjust this to make the previews bigger or smaller. */
+    :root { --display-scale: 0.4; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #2a2a30;
+      color: #fff;
+      font-family: 'Rubik', -apple-system, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    body { padding: 48px 24px 120px; overflow-x: auto; }
+
+    /* ── Page chrome ── */
+    .page-header {
+      max-width: 760px;
+      margin: 0 auto 56px auto;
+      text-align: center;
+    }
+    .page-header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    .page-header p {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .page-header code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px;
+      padding: 2px 6px;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 4px;
+      color: #c4b5fd;
+    }
+
+    .concept {
+      max-width: max-content;
+      margin: 0 auto 72px auto;
+    }
+    .concept-header {
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+    }
+    .concept-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #c4b5fd;
+      margin-bottom: 4px;
+    }
+    .concept-header p {
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 14px;
+    }
+
+    .frames {
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+      align-items: flex-start;
+    }
+    .frame-wrap { display: flex; flex-direction: column; align-items: flex-start; }
+    .frame-label {
+      color: rgba(255, 255, 255, 0.45);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* ── Frame base ── */
+    /* The frame keeps its full CSS pixel size (1080×1080, etc.) so html-to-image
+       captures at the correct resolution. We then apply transform: scale() to
+       shrink it visually for the preview, and use negative margins to reclaim
+       the layout space the scaled-down portion would otherwise still occupy. */
+    .frame {
+      position: relative;
+      overflow: hidden;
+      border-radius: 4px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.25);
+      flex-shrink: 0;
+      color: #fff;
+      font-family: 'Rubik', sans-serif;
+      transform: scale(var(--display-scale));
+      transform-origin: top left;
+    }
+    .frame-square {
+      width: 1080px; height: 1080px;
+      margin-right:  calc(-1080px * (1 - var(--display-scale)));
+      margin-bottom: calc(-1080px * (1 - var(--display-scale)));
+    }
+    .frame-vertical {
+      width: 1080px; height: 1920px;
+      margin-right:  calc(-1080px * (1 - var(--display-scale)));
+      margin-bottom: calc(-1920px * (1 - var(--display-scale)));
+    }
+    .frame-horizontal {
+      width: 1200px; height: 628px;
+      margin-right:  calc(-1200px * (1 - var(--display-scale)));
+      margin-bottom: calc( -628px * (1 - var(--display-scale)));
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       CONCEPT A — The 100,000 (big-number hero)
+       ───────────────────────────────────────────────────────── */
+    .ca {
+      background:
+        radial-gradient(ellipse at 30% 15%, rgba(139, 92, 246, 0.22) 0%, transparent 55%),
+        radial-gradient(ellipse at 70% 85%, rgba(168, 85, 247, 0.18) 0%, transparent 55%),
+        linear-gradient(180deg, #0a0a0f 0%, #1a0a25 50%, #0a0a0f 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 80px;
+    }
+    .ca-eyebrow {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      color: #c4b5fd;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .ca-number {
+      font-size: 280px;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      line-height: 0.9;
+      background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 45%, #A855F7 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 24px;
+    }
+    .ca-subline {
+      font-size: 34px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.88);
+      letter-spacing: -0.01em;
+      margin-bottom: 40px;
+    }
+    .ca-divider {
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #A855F7, transparent);
+      margin: 0 auto 36px auto;
+    }
+    .ca-tagline {
+      font-size: 32px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.95);
+      line-height: 1.35;
+      max-width: 720px;
+      margin-bottom: 56px;
+    }
+    .ca-tagline em {
+      font-style: normal;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .ca-foot {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-size: 22px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .ca-foot img { width: 44px; height: 44px; }
+    .ca-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #8B5CF6, #A855F7);
+      border-radius: 14px;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+    }
+
+    /* Concept A — vertical (9:16) tuning */
+    .frame-vertical.ca .ca-eyebrow { font-size: 26px; margin-bottom: 40px; }
+    .frame-vertical.ca .ca-number { font-size: 360px; }
+    .frame-vertical.ca .ca-subline { font-size: 44px; margin-bottom: 60px; }
+    .frame-vertical.ca .ca-divider { width: 160px; margin-bottom: 60px; }
+    .frame-vertical.ca .ca-tagline { font-size: 44px; max-width: 880px; margin-bottom: 100px; }
+    .frame-vertical.ca .ca-foot { font-size: 28px; }
+    .frame-vertical.ca .ca-foot img { width: 56px; height: 56px; }
+    .frame-vertical.ca .ca-cta { font-size: 26px; padding: 18px 36px; }
+
+    /* Concept A — horizontal (1.91:1) layout pivot */
+    .frame-horizontal.ca {
+      flex-direction: row;
+      text-align: left;
+      justify-content: space-between;
+      align-items: center;
+      padding: 60px 80px;
+    }
+    .ca-h-left  { flex: 1.1; }
+    .ca-h-right { flex: 0.9; padding-left: 40px; border-left: 1px solid rgba(168, 85, 247, 0.3); }
+    .frame-horizontal.ca .ca-number { font-size: 200px; margin-bottom: 8px; }
+    .frame-horizontal.ca .ca-subline { font-size: 22px; margin-bottom: 0; }
+    .frame-horizontal.ca .ca-divider { display: none; }
+    .frame-horizontal.ca .ca-eyebrow { font-size: 14px; margin-bottom: 14px; }
+    .frame-horizontal.ca .ca-tagline { font-size: 24px; margin-bottom: 28px; line-height: 1.3; }
+    .frame-horizontal.ca .ca-foot { font-size: 18px; }
+    .frame-horizontal.ca .ca-foot img { width: 32px; height: 32px; }
+    .frame-horizontal.ca .ca-cta { font-size: 16px; padding: 11px 22px; }
+
+    /* ─────────────────────────────────────────────────────────
+       CONCEPT B — Statement (tagline-first, music note bg)
+       ───────────────────────────────────────────────────────── */
+    .cb {
+      background:
+        radial-gradient(ellipse at 80% 30%, rgba(168, 85, 247, 0.28) 0%, transparent 50%),
+        linear-gradient(135deg, #0a0a0f 0%, #1f0a30 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 100px 90px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cb-bg-note {
+      position: absolute;
+      right: -120px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 720px;
+      height: 720px;
+      opacity: 0.18;
+      filter: blur(0.5px);
+      pointer-events: none;
+    }
+    .cb-bg-note img { width: 100%; height: 100%; object-fit: contain; }
+    .cb-eyebrow {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      color: rgba(196, 181, 253, 0.85);
+      text-transform: uppercase;
+      position: relative;
+      z-index: 2;
+    }
+    .cb-headline {
+      font-size: 130px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+      color: #fff;
+      position: relative;
+      z-index: 2;
+      margin: 60px 0 40px 0;
+    }
+    .cb-headline span {
+      background: linear-gradient(135deg, #A855F7, #c4b5fd);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .cb-sub {
+      font-size: 30px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.78);
+      line-height: 1.4;
+      max-width: 780px;
+      position: relative;
+      z-index: 2;
+    }
+    .cb-foot {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      position: relative;
+      z-index: 2;
+      margin-top: 60px;
+    }
+    .cb-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 26px;
+      font-weight: 700;
+      position: relative;
+      z-index: 2;
+    }
+    .cb-brand img { width: 42px; height: 42px; }
+    .cb-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 30px;
+      background: linear-gradient(135deg, #8B5CF6, #A855F7);
+      border-radius: 14px;
+      font-size: 20px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+    }
+
+    /* Concept B — vertical (9:16) tuning */
+    .frame-vertical.cb .cb-headline { font-size: 170px; margin: 100px 0 70px 0; display: flow-root; }
+    /* Push "you." to the right side on 9:16 only; square + horizontal stay inline */
+    .frame-vertical.cb .cb-you { float: right; }
+    .frame-vertical.cb .cb-sub { font-size: 40px; max-width: 880px; }
+    .frame-vertical.cb .cb-bg-note { width: 980px; height: 980px; right: -200px; }
+    .frame-vertical.cb .cb-eyebrow { font-size: 26px; }
+    .frame-vertical.cb .cb-foot { margin-top: 120px; }
+    .frame-vertical.cb .cb-brand { font-size: 32px; }
+    .frame-vertical.cb .cb-brand img { width: 52px; height: 52px; }
+    .frame-vertical.cb .cb-cta { font-size: 26px; padding: 20px 38px; }
+
+    /* Concept B — horizontal (1.91:1) tuning */
+    .frame-horizontal.cb { padding: 50px 70px; }
+    .frame-horizontal.cb .cb-headline { font-size: 76px; margin: 16px 0 18px 0; }
+    .frame-horizontal.cb .cb-sub { font-size: 18px; max-width: 700px; }
+    .frame-horizontal.cb .cb-bg-note { width: 460px; height: 460px; right: -100px; }
+    .frame-horizontal.cb .cb-eyebrow { font-size: 13px; }
+    .frame-horizontal.cb .cb-foot { margin-top: 26px; }
+    .frame-horizontal.cb .cb-brand { font-size: 20px; }
+    .frame-horizontal.cb .cb-brand img { width: 32px; height: 32px; }
+    .frame-horizontal.cb .cb-cta { font-size: 15px; padding: 11px 22px; }
+
+    /* ─────────────────────────────────────────────────────────
+       CONCEPT C — Editorial (quote-style)
+       ───────────────────────────────────────────────────────── */
+    .cc {
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 60%),
+        #08080c;
+      display: flex;
+      flex-direction: column;
+      padding: 110px 100px;
+      position: relative;
+    }
+    .cc-quote-mark {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 320px;
+      font-weight: 900;
+      line-height: 0.6;
+      color: rgba(168, 85, 247, 0.35);
+      margin-bottom: 24px;
+    }
+    .cc-quote {
+      font-size: 56px;
+      font-weight: 500;
+      line-height: 1.18;
+      letter-spacing: -0.025em;
+      color: #fff;
+      margin-bottom: 50px;
+      max-width: 880px;
+    }
+    .cc-quote em {
+      font-style: italic;
+      /* inline-block + padding gives the italic glyphs (especially the "y" tail
+         and the slanted right edge) breathing room so they don't get visually
+         clipped by the inline-text box when background-clip: text is in play. */
+      display: inline-block;
+      padding: 0 0.08em 0.05em 0;
+      background: linear-gradient(135deg, #c4b5fd, #A855F7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    /* Row that holds the pill on the left and "find yours" floating beside it
+       on the right. Margins live here so the pill + label move together. */
+    .cc-stat-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-self: flex-start;
+      margin-top: 32px;
+      margin-bottom: 48px;
+    }
+    .cc-find-yours {
+      font-size: 22px;
+      font-weight: 500;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.88);
+      letter-spacing: 0.01em;
+    }
+    .cc-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 8px 20px;
+      background: rgba(168, 85, 247, 0.1);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 100px;
+      align-self: flex-start;
+      margin-top: 32px;
+      margin-bottom: 48px;
+      /* Force everything inside the pill onto a single line — without this,
+         tight frame widths cause the trailing labels (esp. "find yours") to
+         drop to a second line. */
+      white-space: nowrap;
+    }
+    .cc-stat > * { flex-shrink: 0; }
+    .cc-stat-num {
+      font-size: 32px;
+      font-weight: 800;
+      color: #c4b5fd;
+      letter-spacing: -0.02em;
+    }
+    .cc-stat-label {
+      font-size: 22px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.78);
+    }
+    /* Bullet separator before "find yours" on the inline (1:1 + 1.91:1) layouts.
+       Hidden + replaced by a line break on the 9:16 vertical frame below. */
+    .cc-stat-findyours::before {
+      content: '·';
+      margin-right: 0.45em;
+      opacity: 0.55;
+    }
+    .cc-cta-line {
+      font-size: 26px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.72);
+      font-style: italic;
+      letter-spacing: -0.005em;
+    }
+    /* "free access!" — gradient + bold so the CTA punch lands on the value prop,
+       not the boilerplate. Padding gives the italic-adjacent letters room when
+       background-clip: text is in play. */
+    .cc-cta-emph {
+      font-style: normal;
+      font-weight: 800;
+      letter-spacing: 0.005em;
+      background: linear-gradient(125deg, #ffffff 0%, #c4b5fd 45%, #A855F7 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+      padding: 0 0.08em 0.05em 0.02em;
+      margin-left: 0.2em;
+    }
+    /* Editorial attribution sitting just under the pull-quote */
+    .cc-attrib {
+      font-size: 22px;
+      font-style: italic;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: rgba(196, 181, 253, 0.82);
+      margin-top: -28px; /* tuck closer to the quote */
+      margin-bottom: 28px;
+    }
+    /* Small purple dot used as a quiet visual separator between the quote
+       section (with attribution) and the stat pill below. */
+    .cc-divider-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(168, 85, 247, 0.55);
+      margin-bottom: 28px;
+    }
+    .cc-foot {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 36px;
+      border-top: 1px solid rgba(168, 85, 247, 0.2);
+    }
+    .cc-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .cc-brand img { width: 38px; height: 38px; }
+    .cc-brand .cc-tagline-mini {
+      font-size: 13px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-left: 4px;
+      padding-left: 14px;
+      border-left: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .cc-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 26px;
+      background: linear-gradient(135deg, #8B5CF6, #A855F7);
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    /* Concept C — vertical (9:16) tuning */
+    .frame-vertical.cc { padding: 140px 110px; }
+    .frame-vertical.cc .cc-quote-mark { font-size: 480px; }
+    .frame-vertical.cc .cc-quote { font-size: 84px; margin-bottom: 70px; max-width: 880px; }
+    .frame-vertical.cc .cc-stat {
+      padding: 12px 28px;
+      margin-top: 56px;
+      margin-bottom: 80px;
+    }
+    .frame-vertical.cc .cc-stat-num { font-size: 44px; }
+    .frame-vertical.cc .cc-stat-label { font-size: 28px; }
+    .frame-vertical.cc .cc-cta-line { font-size: 36px; }
+    .frame-vertical.cc .cc-attrib { font-size: 32px; margin-top: -40px; margin-bottom: 44px; }
+    .frame-vertical.cc .cc-divider-dot { width: 10px; height: 10px; margin-bottom: 44px; }
+    .frame-vertical.cc .cc-brand { font-size: 28px; }
+    .frame-vertical.cc .cc-brand img { width: 48px; height: 48px; }
+    .frame-vertical.cc .cc-cta { font-size: 24px; padding: 16px 32px; }
+
+    /* Concept C — horizontal (1.91:1) tuning */
+    .frame-horizontal.cc { padding: 50px 80px; }
+    .frame-horizontal.cc .cc-quote-mark { font-size: 160px; margin-bottom: 0; line-height: 0.5; }
+    .frame-horizontal.cc .cc-quote { font-size: 32px; margin-bottom: 36px; max-width: 980px; }
+    .frame-horizontal.cc .cc-stat { padding: 5px 16px; margin-top: 20px; margin-bottom: 36px; }
+    .frame-horizontal.cc .cc-stat-num { font-size: 22px; }
+    .frame-horizontal.cc .cc-stat-label { font-size: 16px; }
+    .frame-horizontal.cc .cc-cta-line { font-size: 16px; }
+    .frame-horizontal.cc .cc-attrib { font-size: 14px; margin-top: -8px; margin-bottom: 28px; }
+    .frame-horizontal.cc .cc-divider-dot { width: 4px; height: 4px; margin-bottom: 14px; }
+    .frame-horizontal.cc .cc-foot { padding-top: 18px; }
+    .frame-horizontal.cc .cc-brand { font-size: 17px; }
+    .frame-horizontal.cc .cc-brand img { width: 28px; height: 28px; }
+    .frame-horizontal.cc .cc-brand .cc-tagline-mini { font-size: 11px; }
+    .frame-horizontal.cc .cc-cta { font-size: 14px; padding: 9px 20px; }
+
+    /* ── Download button under each frame ── */
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+      padding: 4px 11px;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 6px;
+      color: #c4b5fd;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.08s;
+    }
+    .download-btn:hover:not(:disabled) {
+      background: rgba(168, 85, 247, 0.22);
+      border-color: rgba(168, 85, 247, 0.7);
+      color: #fff;
+    }
+    .download-btn:active:not(:disabled) { transform: translateY(1px); }
+    .download-btn:disabled { opacity: 0.55; cursor: progress; }
+    .download-btn .arrow { font-size: 14px; }
+
+    /* (Capture-time style overrides — border-radius, shadow, transform — are
+       applied directly via html-to-image's `style` option on the cloned node,
+       so the visible DOM never has to flicker during download.) */
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js"></script>
+</head>
+<body>
+
+  <header class="page-header">
+    <h1>Musicaa — Ad Mocks</h1>
+    <p>Three creative concepts, each rendered at the three Meta ad ratios. Click the download button below any frame to save it as an exact-size PNG — ready to upload to Meta Ads Manager, no screenshot tools needed.</p>
+    <p style="margin-top:14px;">Pixel sizes — Square <code>1080×1080</code> · 9:16 <code>1080×1920</code> · 1.91:1 <code>1200×628</code>.</p>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- CONCEPT A — The 100,000 (number-first hero)                  -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section class="concept">
+    <div class="concept-header">
+      <h2>Concept A — The 100,000</h2>
+      <p>Leads with the shock-value stat. Number dominates the frame; tagline supports.</p>
+    </div>
+    <div class="frames">
+
+      <div class="frame-wrap">
+        <div class="frame-label">1:1 — Feed</div>
+        <div class="frame frame-square ca">
+          <div class="ca-eyebrow">Musicaa · Coming Soon</div>
+          <div class="ca-number">100,000</div>
+          <div class="ca-subline">songs released every single day</div>
+          <div class="ca-divider"></div>
+          <div class="ca-tagline">Discover the ones for <em>your</em> taste — not the ones for everyone.</div>
+          <div class="ca-cta">Join the waitlist →</div>
+        </div>
+      </div>
+
+      <div class="frame-wrap">
+        <div class="frame-label">9:16 — Reels / Stories</div>
+        <div class="frame frame-vertical ca">
+          <div class="ca-eyebrow">Musicaa · Coming Soon</div>
+          <div class="ca-number">100,000</div>
+          <div class="ca-subline">songs released every single day</div>
+          <div class="ca-divider"></div>
+          <div class="ca-tagline">Discover the ones for <em>your</em> taste — not the ones for everyone.</div>
+          <div class="ca-cta">Join the waitlist →</div>
+        </div>
+      </div>
+
+      <div class="frame-wrap">
+        <div class="frame-label">1.91:1 — Link / Right Column</div>
+        <div class="frame frame-horizontal ca">
+          <div class="ca-h-left">
+            <div class="ca-eyebrow">Musicaa</div>
+            <div class="ca-number">100,000</div>
+            <div class="ca-subline">songs released every single day</div>
+          </div>
+          <div class="ca-h-right">
+            <div class="ca-tagline">Discover the ones for <em>your</em> taste — not the ones for everyone.</div>
+            <div class="ca-cta">Join the waitlist →</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- CONCEPT B — Statement (tagline-first, with note background)  -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section class="concept">
+    <div class="concept-header">
+      <h2>Concept B — Statement</h2>
+      <p>Bold tagline hero with the music note as ambient background art. Best if you want the voice/personality to lead.</p>
+    </div>
+    <div class="frames">
+
+      <div class="frame-wrap">
+        <div class="frame-label">1:1 — Feed</div>
+        <div class="frame frame-square cb">
+          <div class="cb-brand"><img src="icon.png" alt="">Musicaa</div>
+          <div>
+            <div class="cb-headline">Made for <span class="cb-you">you.</span><br>Not everyone.</div>
+            <div class="cb-sub">Over 100,000 songs are released every single day. We surface the ones that fit your taste — not the stuff everyone else is listening to.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame-wrap">
+        <div class="frame-label">9:16 — Reels / Stories</div>
+        <div class="frame frame-vertical cb">
+          <div class="cb-brand"><img src="icon.png" alt="">Musicaa</div>
+          <div>
+            <div class="cb-headline">Made for <span class="cb-you">you.</span><br>Not everyone.</div>
+            <div class="cb-sub">Over 100,000 songs are released every single day. We surface the ones that fit your taste — not the stuff everyone else is listening to.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame-wrap">
+        <div class="frame-label">1.91:1 — Link / Right Column</div>
+        <div class="frame frame-horizontal cb">
+          <div class="cb-brand"><img src="icon.png" alt="">Musicaa</div>
+          <div>
+            <div class="cb-headline">Made for <span class="cb-you">you.</span> Not everyone.</div>
+            <div class="cb-sub">Over 100,000 songs are released every single day. We surface the ones that fit your taste — not the stuff everyone else is listening to.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- CONCEPT C — Editorial (quote-style, magazine feel)           -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section class="concept">
+    <div class="concept-header">
+      <h2>Concept C — Editorial</h2>
+      <p>Magazine pull-quote treatment. Reads premium and considered; sells the manifesto.</p>
+    </div>
+    <div class="frames">
+
+      <div class="frame-wrap">
+        <div class="frame-label">1:1 — Feed</div>
+        <div class="frame frame-square cc">
+          <div class="cc-quote-mark">"</div>
+          <div class="cc-quote">Get the songs <em>for you</em> — not the ones everyone else is listening to.</div>
+          <div class="cc-attrib">— Musicaa</div>
+          <div class="cc-stat">
+            <span class="cc-stat-label">Over</span>
+            <span class="cc-stat-num">100,000</span>
+            <span class="cc-stat-label">songs are released every day</span>
+            <span class="cc-stat-label cc-stat-findyours">find yours</span>
+          </div>
+          <div class="cc-cta-line">join waitlist below for <span class="cc-cta-emph">free access!</span></div>
+        </div>
+      </div>
+
+      <div class="frame-wrap">
+        <div class="frame-label">9:16 — Reels / Stories</div>
+        <div class="frame frame-vertical cc">
+          <div class="cc-quote-mark">"</div>
+          <div class="cc-quote">Get the songs <em>for you</em> — not the ones everyone else is listening to.</div>
+          <div class="cc-attrib">— Musicaa</div>
+          <div class="cc-stat">
+            <span class="cc-stat-label">Over</span>
+            <span class="cc-stat-num">100,000</span>
+            <span class="cc-stat-label">songs are released every day</span>
+            <span class="cc-stat-label cc-stat-findyours">find yours</span>
+          </div>
+          <div class="cc-cta-line">join waitlist below for <span class="cc-cta-emph">free access!</span></div>
+        </div>
+      </div>
+
+      <div class="frame-wrap">
+        <div class="frame-label">1.91:1 — Link / Right Column</div>
+        <div class="frame frame-horizontal cc">
+          <div class="cc-quote-mark">"</div>
+          <div class="cc-quote">Get the songs <em>for you</em> — not the ones everyone else is listening to.</div>
+          <div class="cc-attrib">— Musicaa</div>
+          <div class="cc-stat">
+            <span class="cc-stat-label">Over</span>
+            <span class="cc-stat-num">100,000</span>
+            <span class="cc-stat-label">songs are released every day</span>
+            <span class="cc-stat-label cc-stat-findyours">find yours</span>
+          </div>
+          <div class="cc-cta-line">join waitlist below for <span class="cc-cta-emph">free access!</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    // Inject a Download button under each frame. The button calls html-to-image
+    // on the frame element and triggers a PNG download at the frame's exact
+    // pixel size (1080x1080 / 1080x1920 / 1200x628). Concept letter comes from
+    // the section's index in document order (A, B, C).
+    const conceptLetters = ['a', 'b', 'c'];
+    const ratioInfo = {
+      'frame-square':     { dims: '1080×1080', slug: 'square',     w: 1080, h: 1080 },
+      'frame-vertical':   { dims: '1080×1920', slug: 'vertical',   w: 1080, h: 1920 },
+      'frame-horizontal': { dims: '1200×628',  slug: 'horizontal', w: 1200, h:  628 },
+    };
+
+    document.querySelectorAll('.concept').forEach((section, idx) => {
+      const letter = conceptLetters[idx] || 'x';
+      section.querySelectorAll('.frame-wrap').forEach(wrap => {
+        const frame = wrap.querySelector('.frame');
+        if (!frame) return;
+
+        // Figure out which ratio this frame is.
+        let ratioKey = null;
+        for (const cls of frame.classList) {
+          if (ratioInfo[cls]) { ratioKey = cls; break; }
+        }
+        if (!ratioKey) return;
+        const info = ratioInfo[ratioKey];
+        const filename = `musicaa-concept-${letter}-${info.slug}.png`;
+
+        // Build the button.
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'download-btn';
+        btn.innerHTML = `<span class="arrow">↓</span> Download ${info.dims}`;
+
+        btn.addEventListener('click', async () => {
+          const originalLabel = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = `<span class="arrow">⏳</span> Generating…`;
+          try {
+            // Wait for web fonts to be ready so the export doesn't render
+            // with a fallback font on the first click.
+            if (document.fonts && document.fonts.ready) await document.fonts.ready;
+            // Capture at the frame's TRUE pixel size (e.g. 1080×1080), with the
+            // preview-only transform/margins/radius stripped — this is applied
+            // to the cloned node only, so the visible DOM doesn't flicker.
+            const dataUrl = await htmlToImage.toPng(frame, {
+              pixelRatio: 1,
+              cacheBust: true,
+              width:  info.w,
+              height: info.h,
+              style: {
+                transform: 'none',
+                transformOrigin: 'top left',
+                margin: '0',
+                marginRight: '0',
+                marginBottom: '0',
+                borderRadius: '0',
+                boxShadow: 'none',
+              },
+            });
+            const a = document.createElement('a');
+            a.download = filename;
+            a.href = dataUrl;
+            a.click();
+          } catch (err) {
+            console.error('Download failed:', err);
+            alert('Download failed — check the console. (' + (err && err.message) + ')');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalLabel;
+          }
+        });
+
+        // Insert the button right after the label (before the frame itself).
+        const label = wrap.querySelector('.frame-label');
+        if (label && label.nextSibling) {
+          wrap.insertBefore(btn, label.nextSibling);
+        } else {
+          wrap.appendChild(btn);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
