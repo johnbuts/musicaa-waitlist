@@ -443,27 +443,21 @@
       margin-right: 0.45em;
       opacity: 0.55;
     }
+    /* Green pill wrapping the whole CTA line — bold white text on the brand's
+       success-green gradient. align-self: flex-start prevents it from
+       stretching to the parent's full width (the .cc frame is a flex column
+       with default align-items: stretch). Padding and shadow scale via em
+       so the pill stays proportional across the three frame sizes. */
     .cc-cta-line {
+      align-self: flex-start;
       font-size: 26px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.72);
-      font-style: italic;
-      letter-spacing: -0.005em;
-    }
-    /* "free access!" — gradient + bold so the CTA punch lands on the value prop,
-       not the boilerplate. Padding gives the italic-adjacent letters room when
-       background-clip: text is in play. */
-    .cc-cta-emph {
-      font-style: normal;
-      font-weight: 800;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      padding: 0.45em 0.95em;
+      border-radius: 999px;
       letter-spacing: 0.005em;
-      background: linear-gradient(125deg, #ffffff 0%, #c4b5fd 45%, #A855F7 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      display: inline-block;
-      padding: 0 0.08em 0.05em 0.02em;
-      margin-left: 0.2em;
+      box-shadow: 0 0 1em rgba(52, 211, 153, 0.3);
     }
     /* Editorial attribution sitting just under the pull-quote */
     .cc-attrib {
@@ -915,7 +909,7 @@
             <span class="cc-stat-label">songs are released every day</span>
             <span class="cc-stat-label cc-stat-findyours">find yours</span>
           </div>
-          <div class="cc-cta-line">join waitlist below for <span class="cc-cta-emph">free access!</span></div>
+          <div class="cc-cta-line">join waitlist in bio for free access!</div>
         </div>
       </div>
 
@@ -931,7 +925,7 @@
             <span class="cc-stat-label">songs are released every day</span>
             <span class="cc-stat-label cc-stat-findyours">find yours</span>
           </div>
-          <div class="cc-cta-line">join waitlist below for <span class="cc-cta-emph">free access!</span></div>
+          <div class="cc-cta-line">join waitlist in bio for free access!</div>
         </div>
       </div>
 
@@ -947,7 +941,7 @@
             <span class="cc-stat-label">songs are released every day</span>
             <span class="cc-stat-label cc-stat-findyours">find yours</span>
           </div>
-          <div class="cc-cta-line">join waitlist below for <span class="cc-cta-emph">free access!</span></div>
+          <div class="cc-cta-line">join waitlist in bio for free access!</div>
         </div>
       </div>
 
